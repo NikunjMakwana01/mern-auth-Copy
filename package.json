@@ -1,0 +1,21 @@
+{
+  "name": "mern-voting-app",
+  "version": "1.0.0",
+  "description": "MERN Stack Voting Web Application with Indian Government UI/UX",
+  "main": "index.js",
+  "scripts": {
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cd backend1 && npm start",
+    "client": "cd frontend1 && npm start",
+    "dev": "concurrently \"npm run server:dev\" \"npm run client\"",
+    "server:dev": "cd backend1 && npm run dev",
+    "install-all": "npm install && cd backend1 && npm install && cd ../frontend1 && npm install",
+    "build": "cd frontend1 && npm run build"
+  },
+  "keywords": ["mern", "voting", "authentication", "otp", "jwt"],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
