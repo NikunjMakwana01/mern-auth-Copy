@@ -38,13 +38,6 @@ const Home = () => {
     }
   ];
 
-  const stats = [
-    { number: '10M+', label: 'Registered Users' },
-    { number: '99.9%', label: 'Uptime' },
-    { number: '256-bit', label: 'Encryption' },
-    { number: '24/7', label: 'Support' }
-  ];
-
   const howItWorks = [
     {
       step: '01',
@@ -145,33 +138,6 @@ const Home = () => {
                 <p className="text-gray-600 dark:text-gray-300">
                   {feature.description}
                 </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Statistics Section */}
-      <section className="py-20 bg-orange-50 dark:bg-gray-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Trusted by Millions
-            </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300">
-              Our platform has successfully provided secure authentication services to users worldwide.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-4xl md:text-5xl font-bold text-orange-600 mb-2">
-                  {stat.number}
-                </div>
-                <div className="text-gray-600 dark:text-gray-300 font-medium">
-                  {stat.label}
-                </div>
               </div>
             ))}
           </div>

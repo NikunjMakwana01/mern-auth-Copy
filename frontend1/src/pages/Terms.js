@@ -58,10 +58,6 @@ const Terms = () => {
     'Attempting to manipulate or influence voting results',
     'Sharing account credentials with others',
     'Using automated tools or bots to access the platform',
-    'Spreading misinformation about candidates or elections',
-    'Attempting to breach platform security measures',
-    'Engaging in any form of voter intimidation or coercion',
-    'Using the platform for commercial or political campaigning'
   ];
 
   return (
@@ -179,103 +175,9 @@ const Terms = () => {
           </div>
           <div className="mt-6 p-4 bg-red-100 dark:bg-red-800 rounded-lg border border-red-300 dark:border-red-600">
             <p className="text-red-800 dark:text-red-200 text-center font-semibold">
-              ⚠️ Violation of any of these prohibitions will result in immediate account termination, 
+              Violation of any of these prohibitions will result in immediate account termination, 
               potential legal action, and reporting to relevant authorities.
             </p>
-          </div>
-        </div>
-
-        {/* Legal Information */}
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl shadow-xl p-8 mb-16 text-white">
-          <h2 className="text-3xl font-bold mb-8 text-center">Legal Framework</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-xl font-semibold mb-4">Governing Laws</h3>
-              <ul className="space-y-2 text-blue-100">
-                <li>• Representation of the People Act, 1951</li>
-                <li>• Information Technology Act, 2000</li>
-                <li>• Election Commission Guidelines</li>
-                <li>• Data Protection Regulations</li>
-                <li>• Cyber Security Framework</li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold mb-4">Jurisdiction</h3>
-              <ul className="space-y-2 text-blue-100">
-                <li>• Courts in New Delhi, India</li>
-                <li>• Election Commission of India</li>
-                <li>• Cyber Crime Units</li>
-                <li>• Data Protection Authority</li>
-                <li>• Law Enforcement Agencies</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Account Termination */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-16">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white text-center mb-8">
-            Account Termination and Consequences
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Grounds for Termination</h3>
-              <div className="space-y-3">
-                <div className="flex items-start space-x-3">
-                  <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center mt-1">
-                    <span className="text-white text-xs">!</span>
-                  </div>
-                  <p className="text-gray-700 dark:text-gray-300">Violation of terms of service</p>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center mt-1">
-                    <span className="text-white text-xs">!</span>
-                  </div>
-                  <p className="text-gray-700 dark:text-gray-300">Suspicious or fraudulent activity</p>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center mt-1">
-                    <span className="text-white text-xs">!</span>
-                  </div>
-                  <p className="text-gray-700 dark:text-gray-300">Multiple account violations</p>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center mt-1">
-                    <span className="text-white text-xs">!</span>
-                  </div>
-                  <p className="text-gray-700 dark:text-gray-300">Legal requirements or court orders</p>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Consequences</h3>
-              <div className="space-y-3">
-                <div className="flex items-start space-x-3">
-                  <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center mt-1">
-                    <span className="text-white text-xs">!</span>
-                  </div>
-                  <p className="text-gray-700 dark:text-gray-300">Immediate account suspension</p>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center mt-1">
-                    <span className="text-white text-xs">!</span>
-                  </div>
-                  <p className="text-gray-700 dark:text-gray-300">Permanent ban from platform</p>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center mt-1">
-                    <span className="text-white text-xs">!</span>
-                  </div>
-                  <p className="text-gray-700 dark:text-gray-300">Legal action and prosecution</p>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <div className="w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center mt-1">
-                    <span className="text-white text-xs">!</span>
-                  </div>
-                  <p className="text-gray-700 dark:text-gray-300">Reporting to authorities</p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -289,9 +191,9 @@ const Terms = () => {
             please contact our legal department:
           </p>
           <div className="space-y-2 text-gray-700 dark:text-gray-300">
-            <p><strong>Email:</strong> legal@votingapp.gov.in</p>
-            <p><strong>Phone:</strong> +91 1800-XXX-XXXX</p>
-            <p><strong>Address:</strong> Legal Department, Election Commission of India, New Delhi</p>
+            <p><strong>Email:</strong> legal@votingapp.ac.in</p>
+            <p><strong>Phone:</strong> +91 1800-180-1800</p>
+            <p><strong>Address:</strong> Ganpat University - U.V Patel College of Engineering, Mehsana - 384012, Gujarat</p>
           </div>
         </div>
       </div>

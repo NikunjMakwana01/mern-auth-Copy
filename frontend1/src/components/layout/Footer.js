@@ -46,7 +46,7 @@ const Footer = () => {
               <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
                 <span className="text-white text-xl font-bold">🏛️</span>
               </div>
-              <span className="text-xl font-bold">Voting App</span>
+              <span className="text-xl font-bold">DigiVote App</span>
             </div>
             <p className="text-gray-300 text-sm leading-relaxed">
               Secure Digital Voting Platform built with cutting-edge technology to ensure transparent, 
@@ -150,7 +150,7 @@ const Footer = () => {
       <div className="bg-orange-600 py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-white text-sm font-medium">
-            🏛️ Official Government Digital Voting Platform | Secure • Transparent • Accessible
+            🏛️ Digital Voting Platform | Secure • Transparent • Accessible
           </p>
         </div>
       </div>

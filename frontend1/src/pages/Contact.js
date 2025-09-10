@@ -34,19 +34,19 @@ const Contact = () => {
     {
       icon: <FaPhone />,
       title: 'Phone',
-      details: ['+91 1800-XXX-XXXX', '+91 98765 43210'],
+      details: ['+91 1800-180-1800'],
       color: 'from-blue-500 to-blue-600'
     },
     {
       icon: <FaEnvelope />,
       title: 'Email',
-      details: ['support@votingapp.gov.in', 'info@votingapp.gov.in'],
+      details: ['support@votingapp.ac.in', 'info@votingapp.ac.in'],
       color: 'from-green-500 to-green-600'
     },
     {
       icon: <FaMapMarkerAlt />,
       title: 'Address',
-      details: ['Election Commission of India', 'Nirvachan Sadan, Ashoka Road', 'New Delhi - 110001, India'],
+      details: ['Ganpat University', 'U.V Patel College of Engineering', 'Mehsana - 384012, Gujarat'],
       color: 'from-purple-500 to-purple-600'
     },
     {
@@ -60,20 +60,20 @@ const Contact = () => {
   const departments = [
     {
       name: 'Technical Support',
-      email: 'tech@votingapp.gov.in',
-      phone: '+91 1800-XXX-XXXX',
+      email: 'tech@votingapp.ac.in',
+      phone: '+91 1800-180-1800',
       description: 'For technical issues and platform support'
     },
     {
       name: 'Voter Registration',
       email: 'registration@votingapp.gov.in',
-      phone: '+91 1800-XXX-XXXX',
+      phone: '+91 1800-180-1800',
       description: 'For voter registration and verification queries'
     },
     {
       name: 'General Inquiries',
       email: 'info@votingapp.gov.in',
-      phone: '+91 1800-XXX-XXXX',
+      phone: '+91 1800-180-1800',
       description: 'For general information and assistance'
     }
   ];
@@ -236,7 +236,7 @@ const Contact = () => {
                 For urgent matters or technical support, please call our 24/7 helpline:
               </p>
               <div className="text-center">
-                <p className="text-3xl font-bold mb-2">+91 1800-XXX-XXXX</p>
+                <p className="text-3xl font-bold mb-2">+91 1800-180-1800</p>
                 <p className="text-orange-100">Available 24/7</p>
               </div>
             </div>

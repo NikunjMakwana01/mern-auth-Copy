@@ -43,7 +43,7 @@ const Privacy = () => {
     },
     {
       category: 'Identity Documents',
-      examples: ['Aadhaar Number', 'PAN Card', 'Voter ID', 'Passport Number'],
+      examples: ['Voter ID'],
       purpose: 'Identity verification and authentication'
     },
     {
@@ -137,53 +137,6 @@ const Privacy = () => {
           </div>
         </div>
 
-        {/* Security Measures */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl shadow-xl p-8 mb-16 text-white">
-          <h2 className="text-3xl font-bold mb-8 text-center">Security Measures We Implement</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center mt-1">
-                  <span className="text-white text-xs">✓</span>
-                </div>
-                <p className="text-orange-100">256-bit SSL encryption for all data transmission</p>
-              </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center mt-1">
-                  <span className="text-white text-xs">✓</span>
-                </div>
-                <p className="text-orange-100">Multi-factor authentication for all user accounts</p>
-              </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center mt-1">
-                  <span className="text-white text-xs">✓</span>
-                </div>
-                <p className="text-orange-100">Regular security audits and penetration testing</p>
-              </div>
-            </div>
-            <div className="space-y-4">
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center mt-1">
-                  <span className="text-white text-xs">✓</span>
-                </div>
-                <p className="text-orange-100">24/7 monitoring and threat detection systems</p>
-              </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center mt-1">
-                  <span className="text-white text-xs">✓</span>
-                </div>
-                <p className="text-orange-100">Secure data centers with physical access controls</p>
-              </div>
-              <div className="flex items-start space-x-3">
-                <div className="w-6 h-6 bg-white bg-opacity-20 rounded-full flex items-center justify-center mt-1">
-                  <span className="text-white text-xs">✓</span>
-                </div>
-                <p className="text-orange-100">Comprehensive backup and disaster recovery plans</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Data Retention */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-16">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white text-center mb-8">
@@ -253,9 +206,9 @@ const Privacy = () => {
             please contact our Data Protection Officer:
           </p>
           <div className="space-y-2 text-gray-700 dark:text-gray-300">
-            <p><strong>Email:</strong> privacy@votingapp.gov.in</p>
-            <p><strong>Phone:</strong> +91 1800-XXX-XXXX</p>
-            <p><strong>Address:</strong> Data Protection Office, Election Commission of India, New Delhi</p>
+            <p><strong>Email:</strong> privacy@votingapp.ac.in</p>
+            <p><strong>Phone:</strong> +91 1800-180-1800</p>
+            <p><strong>Address:</strong> Ganpat University - U.V Patel College of Engineering, Mehsana - 384012, Gujarat</p>
           </div>
         </div>
       </div>

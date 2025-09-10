@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { FaHeadset, FaBook, FaVideo, FaComments, FaTicketAlt, FaSearch, FaPhone, FaEnvelope, FaClock } from 'react-icons/fa';
+import { FaHeadset, FaBook, FaVideo, FaComments, FaPhone, FaEnvelope, FaClock } from 'react-icons/fa';
 
 const Support = () => {
-  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
 
   const supportCategories = [
@@ -13,8 +12,6 @@ const Support = () => {
       color: 'from-blue-500 to-blue-600',
       articles: [
         'How to register as a new voter',
-        'Updating voter information',
-        'Document requirements for registration',
         'Registration verification process',
         'Common registration issues'
       ]
@@ -26,9 +23,7 @@ const Support = () => {
       color: 'from-green-500 to-green-600',
       articles: [
         'How to cast your vote online',
-        'Voting security measures',
         'Vote verification process',
-        'Troubleshooting voting issues',
         'Voting from different devices'
       ]
     },
@@ -39,31 +34,15 @@ const Support = () => {
       color: 'from-purple-500 to-purple-600',
       articles: [
         'Resetting your password',
-        'Updating profile information',
-        'Account security settings',
-        'Two-factor authentication',
-        'Account recovery process'
+        'Updating profile information'
       ]
     },
-    {
-      id: 'technical',
-      name: 'Technical Support',
-      icon: <FaHeadset />,
-      color: 'from-orange-500 to-orange-600',
-      articles: [
-        'Browser compatibility issues',
-        'Mobile app troubleshooting',
-        'Network connectivity problems',
-        'Performance optimization',
-        'Error message explanations'
-      ]
-    }
   ];
 
   const faqs = [
     {
       question: 'How do I know if my vote was counted?',
-      answer: 'After casting your vote, you will receive a unique confirmation number. You can use this number to verify your vote was recorded in our secure system. Additionally, you can check your voting history in your account dashboard.'
+      answer: 'After casting your vote,you can check your voting history in your account dashboard.'
     },
     {
       question: 'What if I forget my password?',
@@ -78,10 +57,6 @@ const Support = () => {
       answer: 'Absolutely! Our platform is fully responsive and works on all devices including smartphones and tablets. We also have a dedicated mobile app available for download from the App Store and Google Play Store.'
     },
     {
-      question: 'What documents do I need for registration?',
-      answer: 'You will need a valid government-issued ID (Aadhaar, PAN, Voter ID, or Passport), proof of address, and a recent photograph. All documents must be current and valid at the time of registration.'
-    },
-    {
       question: 'How long does registration take?',
       answer: 'The registration process typically takes 5-10 minutes to complete. However, verification and approval may take 24-48 hours. You will receive an email notification once your account is activated.'
     }
@@ -91,13 +66,13 @@ const Support = () => {
     {
       icon: <FaPhone />,
       title: '24/7 Helpline',
-      details: ['+91 1800-XXX-XXXX', 'Available round the clock'],
+      details: ['+91 1800-180-1800'],
       color: 'from-green-500 to-green-600'
     },
     {
       icon: <FaEnvelope />,
       title: 'Email Support',
-      details: ['support@votingapp.gov.in', 'Response within 4 hours'],
+      details: ['support@votingapp.ac.in', 'Response within 4 hours'],
       color: 'from-blue-500 to-blue-600'
     },
     {
@@ -133,26 +108,6 @@ const Support = () => {
           </p>
         </div>
 
-        {/* Search Bar */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-16">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white text-center mb-6">
-              How can we help you today?
-            </h2>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <FaSearch className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search for help articles, FAQs, or topics..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full pl-12 pr-4 py-4 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-white text-lg"
-              />
-            </div>
-          </div>
-        </div>
 
         {/* Category Filter */}
         <div className="mb-12">
@@ -241,22 +196,6 @@ const Support = () => {
                 </p>
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* Support Ticket */}
-        <div className="bg-gradient-to-r from-orange-500 to-orange-600 rounded-2xl shadow-xl p-8 text-white">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FaTicketAlt className="text-white text-2xl" />
-            </div>
-            <h2 className="text-3xl font-bold mb-4">Still Need Help?</h2>
-            <p className="text-orange-100 text-lg mb-6">
-              Can't find what you're looking for? Create a support ticket and our team will get back to you within 4 hours.
-            </p>
-            <button className="bg-white text-orange-600 font-semibold px-8 py-3 rounded-lg hover:bg-orange-50 transition-colors duration-200">
-              Create Support Ticket
-            </button>
           </div>
         </div>
 
