@@ -105,6 +105,7 @@ router.post('/generate-registration-otp', [
       success: true,
       message: 'OTP sent to your email successfully',
       data: {
+        otp,
         email,
         expiresIn: '10 minutes'
       }
@@ -281,6 +282,7 @@ router.post('/login', [
       success: true,
       message: 'OTP sent to your email for login verification',
       data: {
+        otp,
         email,
         expiresIn: '10 minutes'
       }
