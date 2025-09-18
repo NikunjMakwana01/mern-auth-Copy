@@ -106,15 +106,15 @@ const Footer = () => {
             <div className="space-y-3">
               <div className="flex items-center space-x-3">
                 <FaPhone className="text-orange-400 w-4 h-4" />
-                <span className="text-gray-300 text-sm">+91 1800-XXX-XXXX</span>
+                <span className="text-gray-300 text-sm">+91 1800-180-1800</span>
               </div>
               <div className="flex items-center space-x-3">
                 <FaEnvelope className="text-orange-400 w-4 h-4" />
-                <span className="text-gray-300 text-sm">support@votingapp.gov.in</span>
+                <span className="text-gray-300 text-sm">digivoteapp.ac.in</span>
               </div>
               <div className="flex items-center space-x-4">
                 <FaMapMarkerAlt className="text-orange-400 w-4 h-4" />
-                <span className="text-gray-300 text-sm">New Delhi, India</span>
+                <span className="text-gray-300 text-sm">Ganpat University, U.V Patel College of Engineering, Mehsana - 384012, Gujarat</span>
               </div>
             </div>
           </div>
@@ -150,7 +150,7 @@ const Footer = () => {
       <div className="bg-orange-600 py-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-white text-sm font-medium">
-            🏛️ Digital Voting Platform | Secure • Transparent • Accessible
+            Digital Voting Platform | Secure • Transparent • Accessible
           </p>
         </div>
       </div>
