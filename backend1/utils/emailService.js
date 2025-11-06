@@ -207,6 +207,77 @@ class EmailService {
     `;
   }
 
+  async sendVotingPassword(email, fullName, electionTitle, votingPassword) {
+    try {
+      const subject = `Your Voting Password - ${electionTitle}`;
+      const html = this.getVotingPasswordEmailTemplate(fullName, electionTitle, votingPassword);
+      
+      const mailOptions = {
+        from: `"DigiVote App" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: subject,
+        html: html
+      };
+
+      const result = await this.transporter.sendMail(mailOptions);
+      console.log('Voting password email sent successfully:', result.messageId);
+      return { success: true, messageId: result.messageId };
+    } catch (error) {
+      console.error('Error sending voting password email:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  getVotingPasswordEmailTemplate(fullName, electionTitle, votingPassword) {
+    return `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Voting Password</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #ff6b35, #f7931e); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+          .password-box { background: white; border: 2px solid #ff6b35; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
+          .password-code { font-size: 32px; font-weight: bold; color: #ff6b35; letter-spacing: 5px; font-family: 'Courier New', monospace; }
+          .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+          .warning { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin: 20px 0; color: #856404; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>DigiVote</h1>
+          <p>Your Voting Password</p>
+        </div>
+        <div class="content">
+          <h2>Hello ${fullName}!</h2>
+          <p>The election <strong>${electionTitle}</strong> has started. Please use your voting password below to cast your vote:</p>
+          <div class="password-box">
+            <div class="password-code">${votingPassword}</div>
+            <p><strong>Your Voting Password</strong></p>
+          </div>
+          <div class="warning">
+            <strong>Important:</strong>
+            <ul>
+              <li>Keep this password secure and confidential</li>
+              <li>You will need this password to vote</li>
+              <li>Do not share this password with anyone</li>
+            </ul>
+          </div>
+          <p>Visit the voting page and use this password along with your email and election card number to cast your vote.</p>
+          <p>Best regards,<br/>The DigiVote App Team</p>
+        </div>
+        <div class="footer">
+          <p>This is an automated message. Please do not reply to this email.</p>
+          <p>&copy; 2025 DigiVote App. All rights reserved.</p>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
   getPurposeText(purpose) {
     const purposeMap = {
       'email-verification': 'Email Verification',

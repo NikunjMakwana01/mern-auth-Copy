@@ -80,17 +80,67 @@ export const AuthProvider = ({ children }) => {
       
       if (token) {
         try {
+          // Set token in headers first
+          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+          
           const response = await api.get('/api/auth/me');
-          dispatch({
-            type: 'AUTH_SUCCESS',
-            payload: {
-              user: response.data.data.user,
-              token
-            }
-          });
+          if (response.data?.success && response.data?.data?.user) {
+            dispatch({
+              type: 'AUTH_SUCCESS',
+              payload: {
+                user: response.data.data.user,
+                token
+              }
+            });
+          } else {
+            throw new Error('Invalid response format');
+          }
         } catch (error) {
-          localStorage.removeItem('token');
-          dispatch({ type: 'AUTH_FAILURE', payload: 'Session expired' });
+          const status = error?.response?.status;
+          // Only clear token and fail auth on actual auth errors (401/403)
+          if (status === 401 || status === 403) {
+            localStorage.removeItem('token');
+            delete api.defaults.headers.common['Authorization'];
+            dispatch({ type: 'AUTH_FAILURE', payload: 'Session expired' });
+          } else {
+            // For network errors, retry once after a short delay
+            console.warn('Network error during auth check, retrying...');
+            setTimeout(async () => {
+              try {
+                const retryResponse = await api.get('/api/auth/me');
+                if (retryResponse.data?.success && retryResponse.data?.data?.user) {
+                  dispatch({
+                    type: 'AUTH_SUCCESS',
+                    payload: {
+                      user: retryResponse.data.data.user,
+                      token
+                    }
+                  });
+                } else {
+                  throw new Error('Invalid response format');
+                }
+              } catch (retryError) {
+                // If retry fails, keep token but set user to null
+                // Keep loading state so components wait for next successful call
+                const retryStatus = retryError?.response?.status;
+                if (retryStatus === 401 || retryStatus === 403) {
+                  // Real auth error - clear token
+                  localStorage.removeItem('token');
+                  delete api.defaults.headers.common['Authorization'];
+                  dispatch({ 
+                    type: 'AUTH_FAILURE', 
+                    payload: 'Session expired' 
+                  });
+                } else {
+                  // Network error - keep token and keep loading state
+                  // This allows components to keep showing loading spinner
+                  console.warn('Retry failed, keeping loading state');
+                  // Keep in loading state - user will load when network recovers
+                  dispatch({ type: 'AUTH_START' });
+                }
+              }
+            }, 2000);
+          }
         }
       } else {
         dispatch({ type: 'AUTH_FAILURE', payload: null });
@@ -110,6 +160,29 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('token');
     }
   }, [state.token]);
+  
+  // Load user data if we have token but no user (after initial load)
+  useEffect(() => {
+    // Only load if we have token, are authenticated, but user is null/loading
+    if (state.token && state.isAuthenticated && !state.user && !state.isLoading) {
+      const loadUser = async () => {
+        try {
+          const response = await api.get('/api/auth/me');
+          if (response.data?.success && response.data?.data?.user) {
+            dispatch({
+              type: 'UPDATE_USER',
+              payload: response.data.data.user
+            });
+          }
+        } catch (error) {
+          // If it fails, don't set user to null - keep current state
+          console.warn('Failed to load user data:', error.message);
+        }
+      };
+      
+      loadUser();
+    }
+  }, [state.token, state.isAuthenticated, state.user, state.isLoading]);
 
   const login = async (email, password) => {
     dispatch({ type: 'AUTH_START' });
@@ -139,13 +212,16 @@ export const AuthProvider = ({ children }) => {
       
       if (response.data.success) {
         const { user, token } = response.data.data;
+        // Ensure any existing admin session is cleared when user logs in
+        localStorage.removeItem('adminToken');
+        delete api.defaults.headers.common['Authorization'];
         dispatch({
           type: 'AUTH_SUCCESS',
           payload: { user, token }
         });
         
         toast.success('Login successful! Welcome back.');
-        navigate('/dashboard');
+        navigate(user.role === 'admin' ? '/admin' : '/dashboard');
         return { success: true };
       } else {
         throw new Error(response.data.message);
@@ -154,6 +230,35 @@ export const AuthProvider = ({ children }) => {
       const message = error.response?.data?.message || error.message || 'OTP verification failed';
       dispatch({ type: 'AUTH_FAILURE', payload: message });
       toast.error(message);
+      return { success: false, message };
+    }
+  };
+
+  // Role-aware OTP verification without auto-redirect
+  const verifyLoginOTPAs = async (email, otp, requiredRole) => {
+    dispatch({ type: 'AUTH_START' });
+    try {
+      const response = await api.post('/api/auth/verify-login', { email, otp });
+      if (response.data.success) {
+        const { user, token } = response.data.data;
+        // Set auth state but do not navigate here
+        dispatch({ type: 'AUTH_SUCCESS', payload: { user, token } });
+        // Clear any existing admin token when a user session starts
+        localStorage.removeItem('adminToken');
+        delete api.defaults.headers.common['Authorization'];
+
+        if (requiredRole && user.role !== requiredRole) {
+          // Revert auth if role mismatch
+          dispatch({ type: 'LOGOUT' });
+          return { success: false, message: 'Access denied: not an admin account' };
+        }
+        return { success: true, user };
+      } else {
+        throw new Error(response.data.message);
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || error.message || 'OTP verification failed';
+      dispatch({ type: 'AUTH_FAILURE', payload: message });
       return { success: false, message };
     }
   };
@@ -186,6 +291,9 @@ export const AuthProvider = ({ children }) => {
       
       if (response.data.success) {
         const { user, token } = response.data.data;
+        // Clear any existing admin token when a user session starts
+        localStorage.removeItem('adminToken');
+        delete api.defaults.headers.common['Authorization'];
         dispatch({
           type: 'AUTH_SUCCESS',
           payload: { user, token }
@@ -260,6 +368,7 @@ export const AuthProvider = ({ children }) => {
     ...state,
     login,
     verifyLoginOTP,
+    verifyLoginOTPAs,
     register,
     verifyRegistration,
     logout,

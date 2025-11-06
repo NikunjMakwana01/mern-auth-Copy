@@ -5,7 +5,7 @@ const User = require('../models/User');
 const OTP = require('../models/OTP');
 const EmailService = require('../utils/emailService');
 const JWTUtils = require('../utils/jwtUtils');
-const { authenticateToken, requireVerification, checkAccountLock } = require('../middleware/auth');
+const { authenticateToken } = require('../middleware/auth');
 
 const router = express.Router();
 const emailService = new EmailService();

@@ -16,13 +16,13 @@ import {
   FaIdCard,
   FaCamera
 } from 'react-icons/fa';
+import { getStates, getDistricts, getTalukas, getPlaces } from '../utils/indiaLocations';
 
 const Profile = () => {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, isLoading: authLoading } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
-  
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -31,13 +31,23 @@ const Profile = () => {
     address: '',
     currentAddress: '',
     state: '',
+    district: '',
     city: '',
+    taluka: '',
     voterId: '',
     photo: ''
   });
 
+  // Address dropdown search helpers - must be declared before any conditional returns
+  const [addressState, setAddressState] = useState(user?.state || '');
+  const [addressDistrict, setAddressDistrict] = useState(user?.district || '');
+  const [addressTaluka, setAddressTaluka] = useState(user?.taluka || '');
+  const [addressCity, setAddressCity] = useState(user?.city || '');
   
+  // Track if we're in edit mode to prevent auto-resets
+  const [isInitializingEdit, setIsInitializingEdit] = useState(false);
 
+  // All useEffect hooks must be before conditional return
   useEffect(() => {
     if (user) {
       setFormData({
@@ -47,12 +57,80 @@ const Profile = () => {
         address: user.address || '',
         currentAddress: user.currentAddress || '',
         state: user.state || '',
+        district: user.district || '',
         city: user.city || '',
+        taluka: user.taluka || '',
         voterId: user.voterId || '',
         photo: user.photo || ''
       });
     }
   }, [user]);
+
+  // Initialize address fields when entering edit mode or when user data changes
+  useEffect(() => {
+    if (user) {
+      setAddressState(user.state || '');
+      setAddressDistrict(user.district || '');
+      setAddressTaluka(user.taluka || '');
+      setAddressCity(user.city || '');
+    }
+  }, [user]);
+
+  // When user changes state in edit mode, reset dependent fields (only during edit, not initialization)
+  useEffect(() => {
+    if (isEditing && !isInitializingEdit && user) {
+      // Only reset if state actually changed (not on initial load)
+      const currentUserState = user?.state || '';
+      if (addressState !== currentUserState && addressState !== '') {
+        setAddressDistrict('');
+        setAddressTaluka('');
+        setAddressCity('');
+      }
+    }
+  }, [addressState, isEditing, isInitializingEdit, user]);
+
+  useEffect(() => {
+    if (isEditing && !isInitializingEdit && user) {
+      const currentUserDistrict = user?.district || '';
+      if (addressDistrict !== currentUserDistrict && addressDistrict !== '') {
+        setAddressTaluka('');
+        setAddressCity('');
+      }
+    }
+  }, [addressDistrict, isEditing, isInitializingEdit, user]);
+
+  useEffect(() => {
+    if (isEditing && !isInitializingEdit && user) {
+      const currentUserTaluka = user?.taluka || '';
+      if (addressTaluka !== currentUserTaluka && addressTaluka !== '') {
+        setAddressCity('');
+      }
+    }
+  }, [addressTaluka, isEditing, isInitializingEdit, user]);
+
+  // Wait for auth to complete before rendering - check after ALL hooks
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading your profile...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // If user is not loaded but we're not loading, show error
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 dark:text-red-400 mb-4">Unable to load user data</p>
+          <p className="text-gray-600 dark:text-gray-400">Please refresh the page or try again later</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -72,25 +150,51 @@ const Profile = () => {
       }));
     }
   };
-
   
+  // Dropdown filtered lists - ensure existing values are included
+  const selectableStates = getStates();
+  const selectableDistricts = (() => {
+    const districts = getDistricts(addressState);
+    if (addressDistrict && !districts.includes(addressDistrict) && user?.district === addressDistrict) {
+      return [addressDistrict, ...districts];
+    }
+    return districts;
+  })();
+  const selectableTalukas = (() => {
+    const talukas = getTalukas(addressState, addressDistrict);
+    if (addressTaluka && !talukas.includes(addressTaluka) && user?.taluka === addressTaluka) {
+      return [addressTaluka, ...talukas];
+    }
+    return talukas;
+  })();
+  const selectablePlaces = (() => {
+    const places = getPlaces(addressState, addressDistrict, addressTaluka);
+    if (addressCity && !places.includes(addressCity) && user?.city === addressCity) {
+      return [addressCity, ...places];
+    }
+    return places;
+  })();
 
+  // Attach address fields on save
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setMessage({ type: '', text: '' });
 
     // Check if any changes were made
+    const finalFormData = { ...formData, state: addressState, district: addressDistrict, taluka: addressTaluka, city: addressCity };
     const hasChanges = 
-      formData.fullName !== (user?.fullName || '') ||
-      formData.mobile !== (user?.mobile || '') ||
-      formData.gender !== (user?.gender || 'prefer-not-to-say') ||
-      formData.address !== (user?.address || '') ||
-      formData.currentAddress !== (user?.currentAddress || '') ||
-      formData.state !== (user?.state || '') ||
-      formData.city !== (user?.city || '') ||
-      formData.voterId !== (user?.voterId || '') ||
-      formData.photo !== (user?.photo || '');
+      finalFormData.fullName !== (user?.fullName || '') ||
+      finalFormData.mobile !== (user?.mobile || '') ||
+      finalFormData.gender !== (user?.gender || 'prefer-not-to-say') ||
+      finalFormData.address !== (user?.address || '') ||
+      finalFormData.currentAddress !== (user?.currentAddress || '') ||
+      finalFormData.state !== (user?.state || '') ||
+      finalFormData.district !== (user?.district || '') ||
+      finalFormData.taluka !== (user?.taluka || '') ||
+      finalFormData.city !== (user?.city || '') ||
+      finalFormData.voterId !== (user?.voterId || '') ||
+      finalFormData.photo !== (user?.photo || '');
 
     console.log('Change detection:', {
       formData,
@@ -101,6 +205,8 @@ const Profile = () => {
         address: user?.address || '',
         currentAddress: user?.currentAddress || '',
         state: user?.state || '',
+        district: user?.district || '',
+        taluka: user?.taluka || '',
         city: user?.city || '',
         voterId: user?.voterId || '',
         photo: user?.photo || ''
@@ -117,11 +223,25 @@ const Profile = () => {
       return;
     }
 
-    console.log('Submitting profile data:', formData);
+    console.log('Submitting profile data:', {
+      ...finalFormData,
+      locationFields: {
+        state: finalFormData.state,
+        district: finalFormData.district,
+        taluka: finalFormData.taluka,
+        city: finalFormData.city
+      }
+    });
 
     try {
-      const response = await updateProfile(formData);
+      const response = await updateProfile(finalFormData);
       console.log('Profile update response:', response);
+      console.log('Updated user data:', {
+        state: response.data?.user?.state,
+        district: response.data?.user?.district,
+        taluka: response.data?.user?.taluka,
+        city: response.data?.user?.city
+      });
       
       if (response.success) {
         updateUser(response.data.user);
@@ -145,6 +265,7 @@ const Profile = () => {
   };
 
   const handleCancel = () => {
+    // Reset form data to original user values
     setFormData({
       fullName: user.fullName || '',
       mobile: user.mobile || '',
@@ -152,11 +273,19 @@ const Profile = () => {
       address: user.address || '',
       currentAddress: user.currentAddress || '',
       state: user.state || '',
+      district: user.district || '',
       city: user.city || '',
+      taluka: user.taluka || '',
       voterId: user.voterId || '',
       photo: user.photo || ''
     });
+    // Reset address dropdowns to original user values
+    setAddressState(user?.state || '');
+    setAddressDistrict(user?.district || '');
+    setAddressTaluka(user?.taluka || '');
+    setAddressCity(user?.city || '');
     setIsEditing(false);
+    setIsInitializingEdit(false);
     setMessage({ type: '', text: '' });
   };
 
@@ -241,7 +370,17 @@ const Profile = () => {
                 {!isEditing ? (
                   <button
                     type="button"
-                    onClick={() => setIsEditing(true)}
+                    onClick={() => {
+                      setIsInitializingEdit(true);
+                      setIsEditing(true);
+                      // Reset to user's current values when entering edit mode
+                      setAddressState(user?.state || '');
+                      setAddressDistrict(user?.district || '');
+                      setAddressTaluka(user?.taluka || '');
+                      setAddressCity(user?.city || '');
+                      // Clear initialization flag after a short delay
+                      setTimeout(() => setIsInitializingEdit(false), 100);
+                    }}
                     className="flex items-center space-x-2 px-4 py-2 text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 dark:bg-orange-900/20 dark:hover:bg-orange-900/30 rounded-lg transition-colors duration-200"
                   >
                     <FaEdit className="w-4 h-4" />
@@ -487,6 +626,105 @@ const Profile = () => {
             </h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* State Dropdown */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FaMapMarkerAlt className="inline w-4 h-4 mr-2 text-orange-500" />
+                  State
+                </label>
+                {isEditing ? (
+                  <select
+                    name="addressState"
+                    value={addressState}
+                    onChange={e => setAddressState(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="">Select State</option>
+                    {selectableStates.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-gray-900 dark:text-white font-medium">
+                    {user?.state || 'Not provided'}
+                  </p>
+                )}
+              </div>
+              {/* District Dropdown */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FaMapMarkerAlt className="inline w-4 h-4 mr-2 text-orange-500" />
+                  District
+                </label>
+                {isEditing ? (
+                  <select
+                    name="addressDistrict"
+                    value={addressDistrict}
+                    onChange={e => setAddressDistrict(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white"
+                    disabled={!addressState}
+                  >
+                    <option value="">Select District</option>
+                    {selectableDistricts.map(d => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-gray-900 dark:text-white font-medium">
+                    {user?.district || 'Not provided'}
+                  </p>
+                )}
+              </div>
+              {/* Taluka Dropdown */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FaMapMarkerAlt className="inline w-4 h-4 mr-2 text-orange-500" />
+                  Taluka
+                </label>
+                {isEditing ? (
+                  <select
+                    name="addressTaluka"
+                    value={addressTaluka}
+                    onChange={e => setAddressTaluka(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white"
+                    disabled={!addressDistrict}
+                  >
+                    <option value="">Select Taluka</option>
+                    {selectableTalukas.map(t => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-gray-900 dark:text-white font-medium">
+                    {user?.taluka || 'Not provided'}
+                  </p>
+                )}
+              </div>
+              {/* City/Village Dropdown */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <FaMapMarkerAlt className="inline w-4 h-4 mr-2 text-orange-500" />
+                  City/Village
+                </label>
+                {isEditing ? (
+                  <select
+                    name="addressCity"
+                    value={addressCity}
+                    onChange={e => setAddressCity(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white"
+                    disabled={!addressTaluka}
+                  >
+                    <option value="">Select City/Village</option>
+                    {selectablePlaces.map(c => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-gray-900 dark:text-white font-medium">
+                    {user?.city || 'Not provided'}
+                  </p>
+                )}
+              </div>
               {/* Address as per Card */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -561,49 +799,7 @@ const Profile = () => {
                 )}
               </div>
 
-              {/* State */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <FaMapMarkerAlt className="inline w-4 h-4 mr-2 text-orange-500" />
-                  State
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="state"
-                    value={formData.state}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                    placeholder="Enter your state"
-                  />
-                ) : (
-                  <p className="text-gray-900 dark:text-white font-medium">
-                    {user?.state || 'Not provided'}
-                  </p>
-                )}
-              </div>
-
-              {/* City */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  <FaMapMarkerAlt className="inline w-4 h-4 mr-2 text-orange-500" />
-                  City
-                </label>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-                    placeholder="Enter your city"
-                  />
-                ) : (
-                  <p className="text-gray-900 dark:text-white font-medium">
-                    {user?.city || 'Not provided'}
-                  </p>
-                )}
-              </div>
+              
             </div>
           </div>
 

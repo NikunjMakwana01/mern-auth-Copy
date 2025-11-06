@@ -36,12 +36,16 @@ const Navbar = () => {
   const navLinks = [
     { name: 'Home', path: '/', icon: <FaHome /> },
     { name: 'Register', path: '/register', icon: <FaUserEdit />, showWhen: !isAuthenticated },
-    { name: 'Login', path: '/login', icon: <FaClipboardList />, showWhen: !isAuthenticated },
+    { name: 'Login as User', path: '/login', icon: <FaClipboardList />, showWhen: !isAuthenticated },
+    { name: 'Login as Admin', path: '/admin-login', icon: <FaClipboardList />, showWhen: !isAuthenticated },
   ];
 
   const authenticatedLinks = [
-    { name: 'Dashboard', path: '/dashboard', icon: <FaClipboardList /> },
-    { name: 'Profile', path: '/profile', icon: <FaUser /> },
+    // Show user dashboard/profile only for non-admin users
+    ...(user?.role !== 'admin' ? [
+      { name: 'Dashboard', path: '/dashboard', icon: <FaClipboardList /> },
+      { name: 'Profile', path: '/profile', icon: <FaUser /> },
+    ] : [])
   ];
 
 

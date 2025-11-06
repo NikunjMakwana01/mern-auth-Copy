@@ -59,6 +59,16 @@ const userSchema = new mongoose.Schema({
     trim: true,
     maxlength: [50, 'State cannot exceed 50 characters']
   },
+  district: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'District cannot exceed 50 characters']
+  },
+  taluka: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'Taluka cannot exceed 50 characters']
+  },
   city: {
     type: String,
     trim: true,
@@ -93,7 +103,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['voter'],
+    enum: ['voter', 'admin'],
     default: 'voter'
   },
   isActive: {
@@ -113,7 +123,23 @@ const userSchema = new mongoose.Schema({
   profileCompleted: {
     type: Boolean,
     default: false
-  }
+  },
+  // Voting passwords for each election (sent when election starts)
+  votingPasswords: [{
+    electionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Election',
+      required: true
+    },
+    password: {
+      type: String,
+      required: true
+    },
+    sentAt: {
+      type: Date,
+      default: Date.now
+    }
+  }]
 }, {
   timestamps: true
 });

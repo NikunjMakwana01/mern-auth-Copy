@@ -1,5 +1,6 @@
 const JWTUtils = require('../utils/jwtUtils');
 const User = require('../models/User');
+const Admin = require('../models/Admin');
 
 // Middleware to authenticate JWT token
 const authenticateToken = async (req, res, next) => {
@@ -126,5 +127,44 @@ module.exports = {
   requireVerification,
   requireCompleteProfile,
   optionalAuth,
-  checkAccountLock
+  checkAccountLock,
+  // Ensure the authenticated user has required role
+  requireRole: (role) => async (req, res, next) => {
+    try {
+      if (!req.user || req.user.role !== role) {
+        return res.status(403).json({
+          success: false,
+          message: 'Forbidden: insufficient permissions'
+        });
+      }
+      next();
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: 'Role check failed'
+      });
+    }
+  },
+  // Admin-only auth using a different token subject
+  authenticateAdmin: async (req, res, next) => {
+    try {
+      const authHeader = req.headers['authorization'];
+      const token = authHeader && authHeader.split(' ')[1];
+      if (!token) {
+        return res.status(401).json({ success: false, message: 'Access token is required' });
+      }
+      const decoded = JWTUtils.verifyToken(token);
+      if (decoded.sub !== 'admin') {
+        return res.status(403).json({ success: false, message: 'Forbidden' });
+      }
+      const admin = await Admin.findById(decoded.adminId).select('-password');
+      if (!admin) {
+        return res.status(401).json({ success: false, message: 'Invalid admin account' });
+      }
+      req.admin = admin;
+      next();
+    } catch (error) {
+      return res.status(401).json({ success: false, message: error.message || 'Invalid or expired token' });
+    }
+  }
 };

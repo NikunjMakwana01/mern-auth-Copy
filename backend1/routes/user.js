@@ -68,22 +68,32 @@ router.put('/profile', authenticateToken, async (req, res) => {
     console.log('Profile update request received:', req.body);
     console.log('User ID:', req.user._id);
 
-    const { fullName, mobile, gender, address, currentAddress, state, city, voterId, photo } = req.body;
+    const { fullName, mobile, gender, address, currentAddress, state, city, district, taluka, voterId, photo } = req.body;
 
     // Create update object
     const updateData = {};
     
-    if (fullName !== undefined) updateData.fullName = fullName;
-    if (mobile !== undefined) updateData.mobile = mobile;
+    if (fullName !== undefined) updateData.fullName = fullName ? fullName.trim() : '';
+    if (mobile !== undefined) updateData.mobile = mobile ? mobile.trim() : '';
     if (gender !== undefined) updateData.gender = gender;
-    if (address !== undefined) updateData.address = address;
-    if (currentAddress !== undefined) updateData.currentAddress = currentAddress;
-    if (state !== undefined) updateData.state = state;
-    if (city !== undefined) updateData.city = city;
-    if (voterId !== undefined) updateData.voterId = voterId;
+    if (address !== undefined) updateData.address = address ? address.trim() : '';
+    if (currentAddress !== undefined) updateData.currentAddress = currentAddress ? currentAddress.trim() : '';
+    if (state !== undefined) updateData.state = state ? state.trim() : '';
+    if (district !== undefined) updateData.district = district ? district.trim() : '';
+    if (taluka !== undefined) updateData.taluka = taluka ? taluka.trim() : '';
+    if (city !== undefined) updateData.city = city ? city.trim() : '';
+    if (voterId !== undefined) updateData.voterId = voterId ? voterId.trim() : '';
     if (photo !== undefined) updateData.photo = photo;
 
-    console.log('Update data:', updateData);
+    console.log('Update data received:', {
+      fullName: updateData.fullName,
+      mobile: updateData.mobile,
+      state: updateData.state,
+      district: updateData.district,
+      taluka: updateData.taluka,
+      city: updateData.city,
+      ...(photo ? { photo: 'Photo data present' } : {})
+    });
 
     // Check if profile is complete
     const finalData = {
@@ -93,20 +103,26 @@ router.put('/profile', authenticateToken, async (req, res) => {
       address: updateData.address || req.user.address,
       currentAddress: updateData.currentAddress || req.user.currentAddress,
       state: updateData.state || req.user.state,
+      district: updateData.district || req.user.district,
+      taluka: updateData.taluka || req.user.taluka,
       city: updateData.city || req.user.city,
       voterId: updateData.voterId || req.user.voterId,
       photo: updateData.photo || req.user.photo
     };
 
-    const isComplete = finalData.fullName && finalData.fullName.trim() !== '' &&
-                      finalData.mobile && finalData.mobile.trim() !== '' &&
-                      finalData.gender && finalData.gender !== 'prefer-not-to-say' &&
-                      finalData.address && finalData.address.trim() !== '' &&
-                      finalData.currentAddress && finalData.currentAddress.trim() !== '' &&
-                      finalData.state && finalData.state.trim() !== '' &&
-                      finalData.city && finalData.city.trim() !== '' &&
-                      finalData.voterId && finalData.voterId.trim() !== '' &&
-                      finalData.photo && finalData.photo.trim() !== '';
+    // Ensure profileCompleted is always Boolean
+    const isComplete = !!(
+      finalData.fullName && finalData.fullName.trim() !== '' &&
+      finalData.mobile && finalData.mobile.trim() !== '' &&
+      finalData.gender && finalData.gender !== 'prefer-not-to-say' &&
+      finalData.address && finalData.address.trim() !== '' &&
+      finalData.currentAddress && finalData.currentAddress.trim() !== '' &&
+      finalData.state && finalData.state.trim() !== '' &&
+      finalData.district && finalData.district.trim() !== '' &&
+      finalData.taluka && finalData.taluka.trim() !== '' &&
+      finalData.city && finalData.city.trim() !== '' &&
+      finalData.voterId && finalData.voterId.trim() !== ''
+    );
 
     updateData.profileCompleted = isComplete;
 
@@ -117,6 +133,8 @@ router.put('/profile', authenticateToken, async (req, res) => {
       address: finalData.address,
       currentAddress: finalData.currentAddress,
       state: finalData.state,
+      district: finalData.district,
+      taluka: finalData.taluka,
       city: finalData.city,
       voterId: finalData.voterId,
       photo: finalData.photo ? 'Photo data present' : 'No photo data',
@@ -138,7 +156,16 @@ router.put('/profile', authenticateToken, async (req, res) => {
       });
     }
 
-    console.log('User updated successfully:', updatedUser._id);
+    console.log('User updated successfully:', {
+      userId: updatedUser._id,
+      savedFields: {
+        fullName: updatedUser.fullName,
+        state: updatedUser.state,
+        district: updatedUser.district,
+        taluka: updatedUser.taluka,
+        city: updatedUser.city
+      }
+    });
 
     res.json({
       success: true,
