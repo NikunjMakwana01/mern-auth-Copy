@@ -810,11 +810,11 @@ router.delete('/:id/candidates/:candidateId', authenticateAdmin, async (req, res
       });
     }
 
-    // Only allow removal for upcoming elections
-    if (election.status !== 'upcoming') {
+    // Only disallow removal for active elections; allow upcoming and completed
+    if (election.status === 'active') {
       return res.status(400).json({
         success: false,
-        message: 'Cannot remove candidate from active or completed elections'
+        message: 'Cannot remove candidate from an active election'
       });
     }
 
@@ -966,11 +966,11 @@ router.delete('/:id/candidates/:candidateId', authenticateAdmin, async (req, res
       });
     }
 
-    // Only allow removal for upcoming elections
-    if (election.status !== 'upcoming') {
+    // Only disallow removal for active elections; allow upcoming and completed
+    if (election.status === 'active') {
       return res.status(400).json({
         success: false,
-        message: 'Cannot remove candidate from active or completed elections'
+        message: 'Cannot remove candidate from an active election'
       });
     }
 

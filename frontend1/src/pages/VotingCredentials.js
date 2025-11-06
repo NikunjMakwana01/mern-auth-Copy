@@ -45,7 +45,7 @@ const VotingCredentials = () => {
       });
 
       if (response.data.success) {
-        toast.success('Voting password sent to your email');
+        toast.success('Voting password sent to your email', { id: 'request-password-success' });
         navigate('/voting-password', {
           state: { election }
         });
@@ -54,7 +54,7 @@ const VotingCredentials = () => {
       }
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Verification failed';
-      toast.error(message);
+      toast.error(message, { id: 'request-password-error' });
     } finally {
       setLoading(false);
     }

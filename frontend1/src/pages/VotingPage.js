@@ -55,7 +55,7 @@ const VotingPage = () => {
       });
 
       if (response.data.success) {
-        toast.success('Your vote has been cast successfully!');
+        toast.success('Your vote has been cast successfully!', { id: 'cast-vote-success' });
         navigate('/vote-success', {
           state: {
             election: election,
@@ -67,7 +67,7 @@ const VotingPage = () => {
       }
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Failed to cast vote';
-      toast.error(message);
+      toast.error(message, { id: 'cast-vote-error' });
     } finally {
       setLoading(false);
       setConfirming(false);

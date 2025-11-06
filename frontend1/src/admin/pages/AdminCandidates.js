@@ -211,11 +211,11 @@ const AdminCandidatesPage = () => {
   const handleRemoveElectionFromDropdown = async (candidateId, electionId) => {
     if (!window.confirm('Are you sure you want to remove this candidate from the election?')) return;
     try {
-      // Verify status first to prevent removing non-upcoming elections
+      // Verify status first to prevent removing active elections
       const res = await api.get(`/api/elections/${electionId}`);
       const status = res?.data?.data?.election?.status;
-      if (status !== 'upcoming') {
-        setError('Only upcoming elections can be removed. Active or completed elections cannot be modified.');
+      if (status === 'active') {
+        setError('Cannot remove from an active election.');
         return;
       }
       await api.delete(`/api/elections/${electionId}/candidates/${candidateId}`);
@@ -639,8 +639,8 @@ const AdminCandidatesPage = () => {
                                     </button>
                                     <button
                                       onClick={() => handleRemoveElection(viewingCandidate._id, electionId)}
-                                      disabled={assignedElection.status !== 'upcoming'}
-                                      className={`px-3 py-1.5 text-xs text-white rounded ${assignedElection.status !== 'upcoming' ? 'bg-gray-500 cursor-not-allowed opacity-70' : 'bg-red-600 hover:bg-red-700'}`}
+                                      disabled={assignedElection.status === 'active'}
+                                      className={`px-3 py-1.5 text-xs text-white rounded ${assignedElection.status === 'active' ? 'bg-gray-500 cursor-not-allowed opacity-70' : 'bg-red-600 hover:bg-red-700'}`}
                                     >
                                       Remove
                                     </button>

@@ -191,7 +191,7 @@ export const AuthProvider = ({ children }) => {
       const response = await api.post('/api/auth/login', { email, password });
       
       if (response.data.success) {
-        toast.success('OTP sent to your email for verification');
+        toast.success('OTP sent to your email for verification', { id: 'login-otp-sent' });
         return { success: true, email };
       } else {
         throw new Error(response.data.message);
@@ -199,7 +199,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Login failed';
       dispatch({ type: 'AUTH_FAILURE', payload: message });
-      toast.error(message);
+      toast.error(message, { id: 'login-error' });
       return { success: false, message };
     }
   };
@@ -220,7 +220,7 @@ export const AuthProvider = ({ children }) => {
           payload: { user, token }
         });
         
-        toast.success('Login successful! Welcome back.');
+        toast.success('Login successful! Welcome back.', { id: 'login-success' });
         navigate(user.role === 'admin' ? '/admin' : '/dashboard');
         return { success: true };
       } else {
@@ -229,7 +229,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'OTP verification failed';
       dispatch({ type: 'AUTH_FAILURE', payload: message });
-      toast.error(message);
+      toast.error(message, { id: 'verify-login-error' });
       return { success: false, message };
     }
   };
@@ -270,7 +270,7 @@ export const AuthProvider = ({ children }) => {
       const response = await api.post('/api/auth/generate-registration-otp', userData);
       
       if (response.data.success) {
-        toast.success('OTP sent to your email for verification');
+        toast.success('OTP sent to your email for verification', { id: 'register-otp-sent' });
         return { success: true, email: userData.email };
       } else {
         throw new Error(response.data.message);
@@ -278,7 +278,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Registration failed';
       dispatch({ type: 'AUTH_FAILURE', payload: message });
-      toast.error(message);
+      toast.error(message, { id: 'register-error' });
       return { success: false, message };
     }
   };
@@ -299,7 +299,7 @@ export const AuthProvider = ({ children }) => {
           payload: { user, token }
         });
         
-        toast.success('Registration successful! Welcome to DigiVote App.');
+        toast.success('Registration successful! Welcome to DigiVote App.', { id: 'register-success' });
         navigate('/dashboard');
         return { success: true };
       } else {
@@ -308,7 +308,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Registration verification failed';
       dispatch({ type: 'AUTH_FAILURE', payload: message });
-      toast.error(message);
+      toast.error(message, { id: 'register-verify-error' });
       return { success: false, message };
     }
   };
@@ -323,7 +323,7 @@ export const AuthProvider = ({ children }) => {
     } finally {
       dispatch({ type: 'LOGOUT' });
       navigate('/');
-      toast.success('Logged out successfully');
+      toast.success('Logged out successfully', { id: 'logout-success' });
     }
   };
 
@@ -337,14 +337,14 @@ export const AuthProvider = ({ children }) => {
           payload: response.data.data.user
         });
         
-        toast.success('Profile updated successfully');
+        toast.success('Profile updated successfully', { id: 'profile-update-success' });
         return { success: true };
       } else {
         throw new Error(response.data.message);
       }
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Profile update failed';
-      toast.error(message);
+      toast.error(message, { id: 'profile-update-error' });
       return { success: false, message };
     }
   };

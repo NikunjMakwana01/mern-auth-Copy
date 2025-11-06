@@ -46,7 +46,7 @@ const VotingPassword = () => {
       });
 
       if (response.data.success) {
-        toast.success('Credentials verified successfully');
+        toast.success('Credentials verified successfully', { id: 'verify-credentials-success' });
         navigate('/voting-page', {
           state: {
             election: response.data.data.election,
@@ -58,7 +58,7 @@ const VotingPassword = () => {
       }
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Verification failed';
-      toast.error(message);
+      toast.error(message, { id: 'verify-credentials-error' });
     } finally {
       setLoading(false);
     }

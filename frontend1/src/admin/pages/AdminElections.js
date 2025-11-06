@@ -11,7 +11,7 @@ const AdminElectionsPage = () => {
   const [showEditForm, setShowEditForm] = useState(false);
   const [showView, setShowView] = useState(false);
   const [filters, setFilters] = useState({
-		type: 'Panchayat',
+		type: '',
 		status: '',
 		search: ''
 	});
@@ -199,7 +199,7 @@ const AdminElectionsPage = () => {
 
           <div className="flex items-end">
             <button
-              onClick={() => { setFilters({type: 'Panchayat', status: '', search: ''}); setSearchInput(''); }}
+              onClick={() => { setFilters({type: '', status: '', search: ''}); setSearchInput(''); }}
               className="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
             >
               Clear Filters

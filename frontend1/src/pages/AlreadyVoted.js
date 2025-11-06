@@ -44,13 +44,13 @@ const AlreadyVoted = () => {
       const response = await api.post(`/api/voting/view-vote/${election._id}`);
       if (response.data.success) {
         setVoteInfo(response.data.data);
-        toast.success('Vote information retrieved');
+        toast.success('Vote information retrieved', { id: 'view-vote-success' });
       } else {
         throw new Error(response.data.message || 'Failed to view vote');
       }
     } catch (error) {
       const message = error.response?.data?.message || error.message || 'Failed to view vote';
-      toast.error(message);
+      toast.error(message, { id: 'view-vote-error' });
     } finally {
       setViewLoading(false);
     }
