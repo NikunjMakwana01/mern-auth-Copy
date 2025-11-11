@@ -90,7 +90,7 @@ mongoose.connect(process.env.MONGODB_URI, {
     }
   };
   
-  // Run immediately and then every 60 seconds
+  // Run every 60 seconds
   sweepStatuses();
   setInterval(sweepStatuses, 60 * 1000);
   app.listen(PORT, () => {
