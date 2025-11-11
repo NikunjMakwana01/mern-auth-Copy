@@ -18,13 +18,11 @@ const User = require('./models/User');
 const app = express();
 const PORT = process.env.PORT || 5001;
 
-// Security middleware
 app.use(helmet());
 
-// Rate limiting
 const limiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 60 minutes
-  max: 1000, // limit each IP to 100 requests per windowMs
+  max: 1000,
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use(limiter);
