@@ -630,10 +630,16 @@ router.get('/:id/results', authenticateAdmin, async (req, res) => {
 // Publish results (declare winner) for completed election
 router.post('/:id/publish-results', authenticateAdmin, async (req, res) => {
   try {
-    const election = await Election.findById(req.params.id).populate('candidates.candidateId', 'name');
+    const election = await Election.findById(req.params.id).populate('candidates.candidateId', 'name partyName');
     if (!election) {
       return res.status(404).json({ success: false, message: 'Election not found' });
     }
+    
+    // Check if already published
+    if (election.results?.isDeclared) {
+      return res.status(400).json({ success: false, message: 'Results already published' });
+    }
+    
     // Only allow if voting ended
     const now = new Date();
     if (election.votingEndDate > now) {
@@ -646,27 +652,92 @@ router.post('/:id/publish-results', authenticateAdmin, async (req, res) => {
     const winner = election.declareWinner();
     await election.save();
 
-    // After publishing, email users in the election's location with summary and voter list
+    // Reload election with populated candidate data for email
+    const electionForEmail = await Election.findById(req.params.id).populate('candidates.candidateId', 'name partyName');
+    
+    // After publishing, email users in the election's location with winner information
     try {
       const emailService = new EmailService();
       const locationFilter = { isActive: true, profileCompleted: true };
-      if (election.state) locationFilter.state = election.state;
-      if (election.district) locationFilter.district = election.district;
-      if (election.taluka) locationFilter.taluka = election.taluka;
-      if (election.villageCity) locationFilter.city = election.villageCity;
+      if (electionForEmail.state) locationFilter.state = electionForEmail.state;
+      if (electionForEmail.district) locationFilter.district = electionForEmail.district;
+      if (electionForEmail.taluka) locationFilter.taluka = electionForEmail.taluka;
+      if (electionForEmail.villageCity) locationFilter.city = electionForEmail.villageCity;
 
       const recipients = await User.find(locationFilter).select('email fullName');
-      const votes = await Vote.find({ electionId: election._id }).populate('userId', 'fullName email');
-      const voterNames = votes.map(v => v.userId?.fullName).filter(Boolean);
-      const top = election.candidates.reduce((a,b)=> (a.votes>b.votes?a:b), { votes: -1 });
-      const subject = `Results Published - ${election.title}`;
-      const summary = `Winner: ${top?.candidateId?.name || 'N/A'} with ${top?.votes || 0} votes. Total votes: ${election.totalVotesCast}. Turnout: ${election.turnoutPercentage}%.`;
-      const votersLine = voterNames.length ? `\nVoters: ${voterNames.slice(0,100).join(', ')}${voterNames.length>100?' and more...':''}` : '';
-      for (const r of recipients) {
-        // lightweight text email using sendOTPEmail template as generic mailer fallback
-        await emailService.sendOTPEmail(r.email, 'RESULT', 'email-verification');
-        // Note: Real implementation would have a dedicated template; placeholder call keeps transport settings consistent
-        console.log(`Result summary email queued to ${r.email}: ${summary}${votersLine}`);
+      
+      // Get winner candidate with populated data
+      const sortedCandidates = [...electionForEmail.candidates].sort((a, b) => b.votes - a.votes);
+      const winnerCandidate = sortedCandidates[0];
+      const winnerName = winnerCandidate?.candidateId?.name || winnerCandidate?.party || 'N/A';
+      const winnerVotes = winnerCandidate?.votes || 0;
+      const winnerParty = winnerCandidate?.candidateId?.partyName || winnerCandidate?.party || 'Independent';
+      const winnerPercentage = winnerCandidate?.votePercentage || 0;
+
+      for (const user of recipients) {
+        const subject = `Election Results Published - ${electionForEmail.title} - Winner: ${winnerName}`;
+        const html = `
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${subject}</title>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background: linear-gradient(135deg, #ff6b35, #f7931e); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+              .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+              .winner-box { background: white; border: 3px solid #10b981; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center; }
+              .winner-name { font-size: 24px; font-weight: bold; color: #10b981; margin: 10px 0; }
+              .stats { background: white; padding: 15px; border-radius: 8px; margin: 15px 0; }
+              .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <h1>DigiVote</h1>
+              <p>Election Results</p>
+            </div>
+            <div class="content">
+              <h2>Hello ${user.fullName}!</h2>
+              <p>The results for <strong>${electionForEmail.title}</strong> have been published.</p>
+              
+              <div class="winner-box">
+                <div style="font-size: 18px; color: #666; margin-bottom: 10px;">Winner</div>
+                <div class="winner-name">${winnerName}</div>
+                <div style="color: #666; margin-top: 5px;">${winnerParty}</div>
+                <div style="margin-top: 15px; font-size: 16px;">
+                  <strong>${winnerVotes}</strong> votes (${winnerPercentage}%)
+                </div>
+              </div>
+
+              <div class="stats">
+                <p><strong>Total Votes Cast:</strong> ${electionForEmail.totalVotesCast || 0}</p>
+                <p><strong>Turnout:</strong> ${electionForEmail.turnoutPercentage || 0}%</p>
+                <p><strong>Location:</strong> ${electionForEmail.villageCity || electionForEmail.taluka || electionForEmail.district || electionForEmail.state || 'N/A'}</p>
+              </div>
+
+              <p style="margin-top: 20px;">You can view detailed results on the DigiVote platform.</p>
+              
+              <p>Best regards,<br/>The DigiVote Admin Team</p>
+            </div>
+            <div class="footer">
+              <p>This is an official message from DigiVote. Please do not reply to this email.</p>
+              <p>&copy; 2025 DigiVote App. All rights reserved.</p>
+            </div>
+          </body>
+          </html>
+        `;
+
+        const mailOptions = {
+          from: `"DigiVote Admin" <${process.env.EMAIL_USER}>`,
+          to: user.email,
+          subject: subject,
+          html: html
+        };
+
+        await emailService.transporter.sendMail(mailOptions);
+        console.log(`Result email sent to ${user.email}`);
       }
     } catch (emailErr) {
       console.error('Result email dispatch error:', emailErr.message);

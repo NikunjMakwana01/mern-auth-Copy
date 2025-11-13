@@ -44,13 +44,13 @@ const AdminLogin = () => {
           <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
-                <label className="block text-sm font-medium">Email</label>
+                <label className="block text-sm font-medium dark:text-white">Email</label>
                 <div className="mt-1 flex items-center gap-2">
                   <input className="input-field flex-1" type="email" required value={formData.email} onChange={e=>setFormData({...formData,email:e.target.value})} />
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium">Password</label>
+                <label className="block text-sm font-medium dark:text-white">Password</label>
                 <div className="mt-1 relative">
                   <input className="input-field w-full pr-10" type={showPassword?'text':'password'} required value={formData.password} onChange={e=>setFormData({...formData,password:e.target.value})} />
                   <button type="button" className="absolute inset-y-0 right-0 pr-3 flex items-center" onClick={()=>setShowPassword(!showPassword)}>
@@ -112,7 +112,7 @@ const AdminLogin = () => {
         <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleVerify}>
             <div>
-              <label className="block text-sm font-medium">OTP</label>
+              <label className="block text-sm font-medium dark:text-white">OTP</label>
               <input className="input-field text-center text-2xl tracking-widest" maxLength={6} value={otp} onChange={e=>setOtp(e.target.value.replace(/\D/g,''))} />
             </div>
             <button disabled={loading} className="w-full py-2 px-4 rounded bg-orange-600 text-white disabled:opacity-50">{loading?'Verifying...':'Verify & Sign In'}</button>

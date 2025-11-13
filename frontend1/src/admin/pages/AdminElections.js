@@ -128,7 +128,7 @@ const AdminElectionsPage = () => {
   // Do not early-return on loading to avoid losing input focus during search
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-4 sm:p-6">
       {error && (
         <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
           {error}
@@ -1161,7 +1161,6 @@ const ViewElectionModal = ({ election, onClose }) => {
             <div><span className="font-semibold">Description:</span> {election.description}</div>
             <div><span className="font-semibold">Start:</span> {formatDate(election.votingStartDate)}</div>
             <div><span className="font-semibold">End:</span> {formatDate(election.votingEndDate)}</div>
-            <div><span className="font-semibold">Result:</span> {formatDate(election.resultDeclarationDate)}</div>
             <div><span className="font-semibold">Status:</span> {election.status}</div>
           </div>
           <div className="mt-4 flex justify-end">

@@ -65,12 +65,9 @@ const Login = () => {
       
       if (result.success) {
         setStep(2);
-        toast.success('OTP sent to your email for verification');
-      } else {
-        toast.error(result.message);
       }
     } catch (error) {
-      toast.error('Login failed. Please try again.');
+      // Error toast is handled in AuthContext
     } finally {
       setLoading(false);
     }
@@ -95,13 +92,10 @@ const Login = () => {
       const result = await verifyLoginOTP(formData.email, otp);
       
       if (result.success) {
-        toast.success('Login successful! Welcome back.');
         navigate('/dashboard');
-      } else {
-        toast.error(result.message);
       }
     } catch (error) {
-      toast.error('OTP verification failed. Please try again.');
+      // Error toast is handled in AuthContext
     } finally {
       setLoading(false);
     }
@@ -114,12 +108,10 @@ const Login = () => {
       const result = await login(formData.email, formData.password);
       
       if (result.success) {
-        toast.success('OTP resent successfully');
-      } else {
-        toast.error(result.message);
+        toast.success('OTP resent successfully', { id: 'resend-otp' });
       }
     } catch (error) {
-      toast.error('Failed to resend OTP. Please try again.');
+      // Error toast is handled in AuthContext
     } finally {
       setLoading(false);
     }

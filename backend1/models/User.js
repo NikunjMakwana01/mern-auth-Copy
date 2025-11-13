@@ -124,6 +124,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isAddressLocked: {
+    type: Boolean,
+    default: false
+  },
   // Voting passwords for each election (sent when election starts)
   votingPasswords: [{
     electionId: {

@@ -70,6 +70,20 @@ router.put('/profile', authenticateToken, async (req, res) => {
 
     const { fullName, mobile, gender, address, currentAddress, state, city, district, taluka, voterId, photo } = req.body;
 
+    // Check if address is locked
+    const user = await User.findById(req.user._id);
+    if (user.isAddressLocked) {
+      // Prevent updating address fields if locked
+      if (address !== undefined || currentAddress !== undefined || 
+          state !== undefined || district !== undefined || 
+          taluka !== undefined || city !== undefined) {
+        return res.status(403).json({
+          success: false,
+          message: 'Address fields are locked and cannot be updated'
+        });
+      }
+    }
+
     // Create update object
     const updateData = {};
     

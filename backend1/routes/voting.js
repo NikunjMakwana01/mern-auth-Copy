@@ -54,9 +54,8 @@ router.post('/request-password', [
       return res.status(400).json({ success: false, message: 'Voting is not open at this time' });
     }
 
-    // Load user to check/store voting password
+    // Load user
     const user = await User.findById(userId);
-    let votingPasswordEntry = user.votingPasswords.find(p => p.electionId.toString() === electionId.toString());
 
     // Helper to generate 8-char password
     const generateVotingPassword = () => {
@@ -66,16 +65,27 @@ router.post('/request-password', [
       return pwd;
     };
 
-    // Create if not exists; otherwise reuse existing for resend
-    if (!votingPasswordEntry) {
-      const newPassword = generateVotingPassword();
-      user.votingPasswords.push({ electionId, password: newPassword, sentAt: new Date() });
-      await user.save();
-      votingPasswordEntry = { electionId, password: newPassword };
-    } else {
-      // Update sentAt on resend
-      votingPasswordEntry.sentAt = new Date();
-      await user.save();
+    // Generate password on-demand (temporary, not saved to database)
+    const votingPassword = generateVotingPassword();
+    
+    // Store temporarily in memory/cache with expiration (using a simple in-memory store)
+    // In production, use Redis or similar
+    if (!global.votingPasswordCache) {
+      global.votingPasswordCache = new Map();
+    }
+    
+    // Store with key: userId_electionId, expires in 24 hours
+    const cacheKey = `${userId}_${electionId}`;
+    global.votingPasswordCache.set(cacheKey, {
+      password: votingPassword,
+      expiresAt: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+    });
+    
+    // Clean up expired entries periodically
+    for (const [key, value] of global.votingPasswordCache.entries()) {
+      if (value.expiresAt < Date.now()) {
+        global.votingPasswordCache.delete(key);
+      }
     }
 
     // Send email with password
@@ -83,7 +93,7 @@ router.post('/request-password', [
       user.email,
       user.fullName,
       election.title,
-      votingPasswordEntry.password
+      votingPassword
     );
 
     return res.json({ success: true, message: 'Voting password sent to your email' });
@@ -164,25 +174,30 @@ router.post('/verify-credentials', [
       });
     }
 
-    // Verify voting password
-    const user = await User.findById(userId);
-    const votingPasswordEntry = user.votingPasswords.find(
-      pwd => pwd.electionId.toString() === electionId.toString()
-    );
-
-    if (!votingPasswordEntry) {
+    // Verify voting password from temporary cache
+    if (!global.votingPasswordCache) {
+      global.votingPasswordCache = new Map();
+    }
+    
+    const cacheKey = `${userId}_${electionId}`;
+    const cachedPassword = global.votingPasswordCache.get(cacheKey);
+    
+    if (!cachedPassword || cachedPassword.expiresAt < Date.now()) {
       return res.status(400).json({
         success: false,
-        message: 'Voting password not found. Please contact support.'
+        message: 'Voting password expired or not found. Please request a new password.'
       });
     }
 
-    if (votingPasswordEntry.password !== votingPassword) {
+    if (cachedPassword.password !== votingPassword) {
       return res.status(401).json({
         success: false,
         message: 'Invalid voting password'
       });
     }
+    
+    // Remove password from cache after successful verification (one-time use)
+    global.votingPasswordCache.delete(cacheKey);
 
     // Get candidates for this election
     const candidates = await Candidate.find({

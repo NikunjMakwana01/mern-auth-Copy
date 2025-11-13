@@ -61,6 +61,8 @@ const Dashboard = () => {
         taluka: user?.taluka || '',
         city: user?.city || ''
       });
+      
+      // Make sure no token is sent for public endpoints
       const res = await api.get(`/api/elections/published-list?${qs.toString()}`);
       const list = res.data?.data?.elections || [];
       if (list.length === 0) {
@@ -73,7 +75,12 @@ const Dashboard = () => {
       setResultsModal(detail.data.data);
     } catch (e) {
       console.error(e);
-      alert(e.response?.data?.message || 'Failed to load results');
+      const errorMsg = e.response?.data?.message || 'Failed to load results';
+      if (errorMsg.includes('token')) {
+        alert('Please refresh the page and try again.');
+      } else {
+        alert(errorMsg);
+      }
     }
   };
 

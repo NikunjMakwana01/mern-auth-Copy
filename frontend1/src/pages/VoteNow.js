@@ -18,14 +18,30 @@ const VoteNow = () => {
   useEffect(() => {
     const load = async () => {
       // Wait for auth to complete and user to be loaded
-      if (authLoading || !user) {
+      if (authLoading) {
+        return;
+      }
+      
+      if (!user) {
+        setError('Please login to view available elections');
+        setLoading(false);
         return;
       }
       
       if (!isProfileComplete) {
         console.log('VoteNow: Profile not complete', { profileCompleted: user?.profileCompleted });
+        setLoading(false);
         return;
       }
+      
+      // Check if token exists
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Please login to view available elections');
+        setLoading(false);
+        return;
+      }
+      
       try {
         setLoading(true);
         setError(null);
@@ -48,7 +64,12 @@ const VoteNow = () => {
         setUpcomingElections(list.filter(e => e.status === 'upcoming'));
       } catch (e) {
         console.error('VoteNow: Error loading elections:', e);
-        setError(e.response?.data?.message || 'Failed to load elections');
+        const errorMsg = e.response?.data?.message || 'Failed to load elections';
+        if (errorMsg.includes('token') || e.response?.status === 401) {
+          setError('Your session has expired. Please login again.');
+        } else {
+          setError(errorMsg);
+        }
       } finally {
         setLoading(false);
       }
@@ -97,6 +118,14 @@ const VoteNow = () => {
                             <button 
                               onClick={async () => {
                                 try {
+                                  // Check if token exists
+                                  const token = localStorage.getItem('token');
+                                  if (!token) {
+                                    alert('Please login to vote');
+                                    navigate('/login');
+                                    return;
+                                  }
+                                  
                                   // Check if user already voted
                                   const statusRes = await api.get(`/api/voting/check-status/${e._id}`);
                                   if (statusRes.data.success && statusRes.data.data.hasVoted) {
@@ -108,8 +137,14 @@ const VoteNow = () => {
                                   }
                                 } catch (error) {
                                   console.error('Error checking vote status:', error);
-                                  // If error, still redirect to credentials page
-                                  navigate('/voting-credentials', { state: { election: e } });
+                                  const errorMsg = error.response?.data?.message || error.message;
+                                  if (errorMsg.includes('token') || error.response?.status === 401) {
+                                    alert('Your session has expired. Please login again.');
+                                    navigate('/login');
+                                  } else {
+                                    // If other error, still redirect to credentials page
+                                    navigate('/voting-credentials', { state: { election: e } });
+                                  }
                                 }
                               }}
                               className="px-3 py-1.5 rounded bg-green-600 hover:bg-green-700 text-white text-sm"

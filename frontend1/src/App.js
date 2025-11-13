@@ -32,6 +32,8 @@ import AdminElectionHistory from './admin/pages/AdminElectionHistory';
 import AdminCandidatesPage from './admin/pages/AdminCandidates';
 import AdminCreateCandidate from './admin/pages/AdminCreateCandidate';
 import AdminEditCandidate from './admin/pages/AdminEditCandidate';
+import AdminNotifications from './admin/pages/AdminNotifications';
+import AdminAccessRoles from './admin/pages/AdminAccessRoles';
 import Profile from './pages/Profile';
 import ForgotPassword from './pages/ForgotPassword';
 import About from './pages/About';
@@ -132,6 +134,8 @@ function App() {
                 <Route path="/admin/candidates/create" element={<AdminLayout><AdminCreateCandidate /></AdminLayout>} />
                 <Route path="/admin/candidates/edit/:id" element={<AdminLayout><AdminEditCandidate /></AdminLayout>} />
                 <Route path="/admin/results" element={<AdminLayout><AdminResults /></AdminLayout>} />
+                <Route path="/admin/notifications" element={<AdminLayout><AdminNotifications /></AdminLayout>} />
+                <Route path="/admin/access-roles" element={<AdminLayout><AdminAccessRoles /></AdminLayout>} />
                 <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
                 <Route 
                   path="/profile" 

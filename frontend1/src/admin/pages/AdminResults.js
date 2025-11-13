@@ -71,8 +71,12 @@ const AdminResults = () => {
     return ended && !declared;
   };
 
+  const isPublished = (e) => {
+    return e.results?.isDeclared === true;
+  };
+
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-4 sm:p-6">
       <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">Manage Results</h1>
       {error && (
         <div className="mt-3 p-3 bg-red-100 border border-red-300 text-red-700 rounded">{error}</div>
@@ -101,10 +105,12 @@ const AdminResults = () => {
                     <div className="text-sm text-gray-500 dark:text-gray-400">{e.type} • {e.level}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <span className="capitalize text-sm text-gray-900 dark:text-white">{e.status}</span>
-                    {e.results?.isDeclared && (
-                      <div className="text-xs text-green-600 dark:text-green-400">Published</div>
-                    )}
+                    <div className="flex flex-col">
+                      <span className="capitalize text-sm text-gray-900 dark:text-white">{e.status}</span>
+                      {e.results?.isDeclared && (
+                        <span className="text-xs text-green-600 dark:text-green-400 font-semibold">Published Result</span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">{e.totalVotesCast || 0}</td>
                   <td className="px-6 py-4 text-sm">
@@ -117,10 +123,10 @@ const AdminResults = () => {
                       </button>
                       <button
                         onClick={() => handlePublish(e._id)}
-                        disabled={!canPublish(e) || publishing}
-                        className={`px-3 py-1.5 rounded text-white ${canPublish(e) ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-500 cursor-not-allowed opacity-70'}`}
+                        disabled={!canPublish(e) || publishing || isPublished(e)}
+                        className={`px-3 py-1.5 rounded text-white ${canPublish(e) && !isPublished(e) ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-500 cursor-not-allowed opacity-70'}`}
                       >
-                        {publishing ? 'Publishing…' : 'Publish Results'}
+                        {isPublished(e) ? 'Already Published' : publishing ? 'Publishing…' : 'Publish Results'}
                       </button>
                     </div>
                   </td>

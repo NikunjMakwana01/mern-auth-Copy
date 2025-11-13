@@ -297,6 +297,141 @@ class EmailService {
       return false;
     }
   }
+
+  async sendAdminCredentialsEmail(email, fullName, tempPassword) {
+    try {
+      const mailOptions = {
+        from: `"DigiVote Admin" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: 'Admin Access Granted - DigiVote',
+        html: this.getAdminCredentialsEmailTemplate(fullName, tempPassword)
+      };
+
+      await this.transporter.sendMail(mailOptions);
+      return { success: true };
+    } catch (error) {
+      console.error('Send admin credentials email error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  async sendAdminAccessGrantedEmail(email, fullName) {
+    try {
+      const mailOptions = {
+        from: `"DigiVote Admin" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: 'Admin Access Granted - DigiVote',
+        html: this.getAdminAccessGrantedEmailTemplate(fullName, email)
+      };
+
+      await this.transporter.sendMail(mailOptions);
+      return { success: true };
+    } catch (error) {
+      console.error('Send admin access granted email error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  getAdminAccessGrantedEmailTemplate(fullName, email) {
+    return `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Admin Access Granted</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+          .info-box { background: white; border: 2px solid #667eea; border-radius: 8px; padding: 20px; margin: 20px 0; }
+          .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+          .warning { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin: 20px 0; color: #856404; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>DigiVote</h1>
+          <p>Admin Access Granted</p>
+        </div>
+        <div class="content">
+          <h2>Hello ${fullName}!</h2>
+          <p>You have been granted admin access to the DigiVote platform.</p>
+          <div class="info-box">
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Password:</strong> Your existing account password</p>
+          </div>
+          <div class="warning">
+            <strong>Important:</strong>
+            <ul>
+              <li>You can login to the admin portal using your existing email and password</li>
+              <li>No new password is required - use the same credentials you use for your user account</li>
+              <li>Keep your admin credentials secure</li>
+              <li>Do not share your credentials with anyone</li>
+            </ul>
+          </div>
+          <p>You can now access the admin portal at the admin login page using your existing credentials.</p>
+          <p>Best regards,<br/>The DigiVote Admin Team</p>
+        </div>
+        <div class="footer">
+          <p>This is an automated message. Please do not reply to this email.</p>
+          <p>&copy; 2025 DigiVote App. All rights reserved.</p>
+        </div>
+      </body>
+      </html>
+    `;
+  }
+
+  getAdminCredentialsEmailTemplate(fullName, tempPassword) {
+    return `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Admin Access Granted</title>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+          .credentials-box { background: white; border: 2px solid #667eea; border-radius: 8px; padding: 20px; text-align: center; margin: 20px 0; }
+          .password-code { font-size: 24px; font-weight: bold; color: #667eea; letter-spacing: 3px; font-family: 'Courier New', monospace; }
+          .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+          .warning { background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 5px; padding: 15px; margin: 20px 0; color: #856404; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>DigiVote</h1>
+          <p>Admin Access Granted</p>
+        </div>
+        <div class="content">
+          <h2>Hello ${fullName}!</h2>
+          <p>You have been granted admin access to the DigiVote platform. Please use the following credentials to login:</p>
+          <div class="credentials-box">
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Temporary Password:</strong></p>
+            <div class="password-code">${tempPassword}</div>
+          </div>
+          <div class="warning">
+            <strong>Important:</strong>
+            <ul>
+              <li>Please change your password after first login</li>
+              <li>Keep your admin credentials secure</li>
+              <li>Do not share these credentials with anyone</li>
+            </ul>
+          </div>
+          <p>You can now login at the admin portal using the above credentials.</p>
+          <p>Best regards,<br/>The DigiVote Admin Team</p>
+        </div>
+        <div class="footer">
+          <p>This is an automated message. Please do not reply to this email.</p>
+          <p>&copy; 2025 DigiVote App. All rights reserved.</p>
+        </div>
+      </body>
+      </html>
+    `;
+  }
 }
 
 module.exports = EmailService;

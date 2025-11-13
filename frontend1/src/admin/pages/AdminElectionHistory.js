@@ -88,7 +88,7 @@ const AdminElectionHistory = () => {
   if (error) return <div className="p-6 text-red-600">{error}</div>;
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
+    <div className="max-w-7xl mx-auto p-4 sm:p-6">
       <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Election History</h1>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
@@ -164,10 +164,30 @@ export default AdminElectionHistory;
 
 // View Election Modal (read-only detailed view)
 const ViewElectionModal = ({ election, onClose }) => {
+  const [candidates, setCandidates] = useState([]);
+  const [loadingCandidates, setLoadingCandidates] = useState(true);
   const formatDate = (date) => new Date(date).toLocaleString('en-IN');
+
+  useEffect(() => {
+    const loadCandidates = async () => {
+      try {
+        setLoadingCandidates(true);
+        const res = await api.get(`/api/elections/${election._id}/results`);
+        if (res.data?.success && res.data?.data?.candidates) {
+          setCandidates(res.data.data.candidates);
+        }
+      } catch (e) {
+        console.error('Failed to load candidates:', e);
+      } finally {
+        setLoadingCandidates(false);
+      }
+    };
+    loadCandidates();
+  }, [election._id]);
+
   return (
     <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white dark:bg-gray-800">
+      <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-2/3 shadow-lg rounded-md bg-white dark:bg-gray-800 max-h-[90vh] overflow-y-auto">
         <div className="mt-3">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white">Election Details</h3>
@@ -177,7 +197,7 @@ const ViewElectionModal = ({ election, onClose }) => {
               </svg>
             </button>
           </div>
-          <div className="space-y-2 text-sm text-gray-800 dark:text-gray-200">
+          <div className="space-y-2 text-sm text-gray-800 dark:text-gray-200 mb-6">
             <div><span className="font-semibold">Title:</span> {election.title}</div>
             <div><span className="font-semibold">Type/Level:</span> {election.type} • {election.level}</div>
             <div><span className="font-semibold">Panchayat:</span> {election.panchayatName || '-'}</div>
@@ -188,10 +208,44 @@ const ViewElectionModal = ({ election, onClose }) => {
             <div><span className="font-semibold">Description:</span> {election.description}</div>
             <div><span className="font-semibold">Start:</span> {formatDate(election.votingStartDate)}</div>
             <div><span className="font-semibold">End:</span> {formatDate(election.votingEndDate)}</div>
-            <div><span className="font-semibold">Result:</span> {formatDate(election.resultDeclarationDate)}</div>
             <div><span className="font-semibold">Status:</span> {election.status} {election.archived ? '(Archived)' : ''}</div>
+            <div><span className="font-semibold">Total Votes:</span> {election.totalVotesCast || 0}</div>
           </div>
-          <div className="mt-4 flex justify-end">
+
+          {/* Candidates Section */}
+          <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+            <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-4">Candidates ({candidates.length})</h4>
+            {loadingCandidates ? (
+              <div className="text-center py-4 text-gray-500">Loading candidates...</div>
+            ) : candidates.length === 0 ? (
+              <div className="text-center py-4 text-gray-500">No candidates found for this election.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {candidates.map((candidate, idx) => (
+                  <div key={candidate.candidateId || idx} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="font-semibold text-gray-900 dark:text-white">{candidate.name || 'N/A'}</div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          <div>Party: {candidate.partyName || '-'}</div>
+                          {candidate.votes !== undefined && (
+                            <div className="mt-1">
+                              <span className="font-medium">Votes: {candidate.votes}</span>
+                              {candidate.votePercentage !== undefined && (
+                                <span className="ml-2">({candidate.votePercentage}%)</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="mt-6 flex justify-end">
             <button onClick={onClose} className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 dark:bg-gray-600 dark:text-gray-300 dark:border-gray-500">Close</button>
           </div>
         </div>

@@ -108,12 +108,9 @@ const Register = () => {
       
       if (result.success) {
         setStep(2);
-        toast.success('OTP sent to your email for verification');
-      } else {
-        toast.error(result.message);
       }
     } catch (error) {
-      toast.error('Registration failed. Please try again.');
+      // Error toast is handled in AuthContext
     } finally {
       setLoading(false);
     }
@@ -138,13 +135,10 @@ const Register = () => {
       const result = await verifyRegistration(formData, otp);
       
       if (result.success) {
-        toast.success('Registration successful! Welcome to Voting App.');
         navigate('/dashboard');
-      } else {
-        toast.error(result.message);
       }
     } catch (error) {
-      toast.error('OTP verification failed. Please try again.');
+      // Error toast is handled in AuthContext
     } finally {
       setLoading(false);
     }
@@ -157,12 +151,10 @@ const Register = () => {
       const result = await register(formData);
       
       if (result.success) {
-        toast.success('OTP resent successfully');
-      } else {
-        toast.error(result.message);
+        toast.success('OTP resent successfully', { id: 'resend-otp' });
       }
     } catch (error) {
-      toast.error('Failed to resend OTP. Please try again.');
+      // Error toast is handled in AuthContext
     } finally {
       setLoading(false);
     }

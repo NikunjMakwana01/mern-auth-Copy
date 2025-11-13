@@ -72,7 +72,7 @@ const Home = () => {
                 <FaVoteYea className="w-12 h-12 text-white" />
               </div>
               <h1 className="text-4xl md:text-6xl font-bold mb-6">
-                Secure Authentication Platform
+                Smart Digi-Vote Platform
               </h1>
               <p className="text-xl md:text-2xl text-orange-100 mb-8 max-w-3xl mx-auto">
                 Experience the future of secure authentication with our robust, transparent, and accessible platform.

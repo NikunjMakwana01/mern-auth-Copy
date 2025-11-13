@@ -637,7 +637,8 @@ const Profile = () => {
                     name="addressState"
                     value={addressState}
                     onChange={e => setAddressState(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white"
+                    disabled={user?.isAddressLocked}
+                    className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white ${user?.isAddressLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <option value="">Select State</option>
                     {selectableStates.map(s => (
@@ -661,8 +662,8 @@ const Profile = () => {
                     name="addressDistrict"
                     value={addressDistrict}
                     onChange={e => setAddressDistrict(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white"
-                    disabled={!addressState}
+                    disabled={!addressState || user?.isAddressLocked}
+                    className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white ${user?.isAddressLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <option value="">Select District</option>
                     {selectableDistricts.map(d => (
@@ -686,8 +687,8 @@ const Profile = () => {
                     name="addressTaluka"
                     value={addressTaluka}
                     onChange={e => setAddressTaluka(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white"
-                    disabled={!addressDistrict}
+                    disabled={!addressDistrict || user?.isAddressLocked}
+                    className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white ${user?.isAddressLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <option value="">Select Taluka</option>
                     {selectableTalukas.map(t => (
@@ -711,8 +712,8 @@ const Profile = () => {
                     name="addressCity"
                     value={addressCity}
                     onChange={e => setAddressCity(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white"
-                    disabled={!addressTaluka}
+                    disabled={!addressTaluka || user?.isAddressLocked}
+                    className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 dark:bg-gray-700 dark:text-white ${user?.isAddressLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <option value="">Select City/Village</option>
                     {selectablePlaces.map(c => (
@@ -737,10 +738,16 @@ const Profile = () => {
                       name="address"
                       value={formData.address}
                       onChange={handleInputChange}
+                      disabled={user?.isAddressLocked}
                       rows="3"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${user?.isAddressLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                       placeholder="Enter your address as per official documents"
                     />
+                    {user?.isAddressLocked && (
+                      <p className="text-xs text-yellow-600 dark:text-yellow-400 mt-1">
+                        Address is locked and cannot be updated
+                      </p>
+                    )}
                     <div className="mt-2">
                       <label className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
                         <input
@@ -779,8 +786,9 @@ const Profile = () => {
                       name="currentAddress"
                       value={formData.currentAddress}
                       onChange={handleInputChange}
+                      disabled={user?.isAddressLocked}
                       rows="3"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                      className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${user?.isAddressLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                       placeholder="Enter your current residential address"
                     />
                     {formData.address === formData.currentAddress && formData.address !== '' && (

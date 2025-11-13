@@ -108,27 +108,32 @@ const AdminLayout = ({ children }) => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col font-sans">
       <AdminNavbar onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-      <div className="flex flex-1 relative">
-        {/* Sidebar: fixed on md+, overlay drawer on small screens */}
+      <div className="flex flex-1 relative overflow-hidden">
+        {/* Sidebar: fixed on large screens (lg+), overlay drawer on smaller screens */}
         <div className={`
-          md:static md:translate-x-0 md:block
+          lg:fixed lg:translate-x-0 lg:block lg:z-30
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-          transition-transform duration-200 ease-out
-          absolute z-40 h-full md:h-auto
+          transition-transform duration-300 ease-in-out
+          fixed z-50 h-full w-64
+          shadow-xl lg:shadow-lg
         `}
         >
           <AdminSidebar onNavigate={() => setSidebarOpen(false)} />
         </div>
-        {/* Backdrop for mobile drawer */}
+        {/* Backdrop for mobile/tablet drawer */}
         {sidebarOpen && (
           <div
-            className="fixed inset-0 bg-black/40 md:hidden"
+            className="fixed inset-0 bg-black/50 lg:hidden z-40"
             onClick={() => setSidebarOpen(false)}
           />
         )}
-        <main className="flex-1 p-6 md:ml-0">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:ml-64 min-w-0">
+          <div className="max-w-7xl mx-auto">
+            {children}
+          </div>
+        </main>
       </div>
       <AdminFooter />
     </div>

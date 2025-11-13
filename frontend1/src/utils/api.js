@@ -18,11 +18,24 @@ api.interceptors.request.use(
     const full = `${base}${url}`;
 
     const path = (config.url || '').toString();
+    
+    // Public endpoints that don't need authentication
+    const isPublicEndpoint = path.includes('/results-public') || 
+                             path.includes('/published-list') ||
+                             path.includes('/meta');
+    
+    // Skip adding tokens for public endpoints
+    if (isPublicEndpoint) {
+      delete config.headers.Authorization;
+      return config;
+    }
+    
     const isAdminElections = path.startsWith('/api/elections') &&
       !path.includes('/available') &&
       !path.includes('/available-user') &&
       !path.includes('/meta') &&
       !path.includes('/results-public') &&
+      !path.includes('/published-list') &&
       !path.includes('/published-user');
     const isAdminCandidates = path.startsWith('/api/candidates');
     const isAdminEndpoint = full.includes('/api/admin') || full.includes('/api/admin-auth') || isAdminElections || isAdminCandidates;
@@ -36,10 +49,14 @@ api.interceptors.request.use(
         delete config.headers.Authorization;
       }
     } else {
+      // For user endpoints, always try to add user token if available
       if (userToken) {
         config.headers.Authorization = `Bearer ${userToken}`;
       } else {
-        delete config.headers.Authorization;
+        // Only delete if it's not a public endpoint (public endpoints already handled above)
+        if (!isPublicEndpoint) {
+          delete config.headers.Authorization;
+        }
       }
     }
     return config;

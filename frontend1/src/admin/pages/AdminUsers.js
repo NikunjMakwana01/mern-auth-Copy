@@ -9,6 +9,7 @@ const AdminUsersPage = () => {
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedUserIds, setSelectedUserIds] = useState([]);
   const [editForm, setEditForm] = useState({
     fullName: '',
     email: '',
@@ -169,7 +170,53 @@ const AdminUsersPage = () => {
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
-      <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-semibold mb-4 sm:mb-6">Manage Users</h1>
+      <div className="flex justify-between items-center mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-semibold">Manage Users</h1>
+        {selectedUserIds.length > 0 && (
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                if (window.confirm(`Lock address for ${selectedUserIds.length} selected user(s)?`)) {
+                  try {
+                    const res = await api.post('/api/admin/users/lock-address', {
+                      userIds: selectedUserIds,
+                      lock: true
+                    });
+                    alert(res.data.message);
+                    setSelectedUserIds([]);
+                    await load();
+                  } catch (e) {
+                    alert(e.response?.data?.message || 'Failed to lock addresses');
+                  }
+                }
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Lock Selected ({selectedUserIds.length})
+            </button>
+            <button
+              onClick={async () => {
+                if (window.confirm(`Unlock address for ${selectedUserIds.length} selected user(s)?`)) {
+                  try {
+                    const res = await api.post('/api/admin/users/lock-address', {
+                      userIds: selectedUserIds,
+                      lock: false
+                    });
+                    alert(res.data.message);
+                    setSelectedUserIds([]);
+                    await load();
+                  } catch (e) {
+                    alert(e.response?.data?.message || 'Failed to unlock addresses');
+                  }
+                }
+              }}
+              className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+            >
+              Unlock Selected ({selectedUserIds.length})
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Search */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-4 md:p-6 mb-4 sm:mb-6">
@@ -197,6 +244,20 @@ const AdminUsersPage = () => {
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-700">
             <tr>
+              <th className="px-4 py-3 text-left text-xs sm:text-sm lg:text-base font-medium text-gray-500 uppercase tracking-wider">
+                <input
+                  type="checkbox"
+                  checked={users.length > 0 && users.every(u => selectedUserIds.includes(u._id))}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedUserIds(users.map(u => u._id));
+                    } else {
+                      setSelectedUserIds([]);
+                    }
+                  }}
+                  className="w-4 h-4 text-blue-600 rounded"
+                />
+              </th>
               <th className="px-4 py-3 text-left text-xs sm:text-sm lg:text-base font-medium text-gray-500 uppercase tracking-wider">Full Name</th>
               <th className="px-4 py-3 text-left text-xs sm:text-sm lg:text-base font-medium text-gray-500 uppercase tracking-wider">City</th>
               <th className="px-4 py-3 text-left text-xs sm:text-sm lg:text-base font-medium text-gray-500 uppercase tracking-wider">Voter ID</th>
@@ -207,6 +268,20 @@ const AdminUsersPage = () => {
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {users.map(u => (
               <tr key={u._id} className={selected?._id === u._id ? 'bg-slate-50 dark:bg-slate-700' : ''}>
+                <td className="px-4 py-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedUserIds.includes(u._id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedUserIds([...selectedUserIds, u._id]);
+                      } else {
+                        setSelectedUserIds(selectedUserIds.filter(id => id !== u._id));
+                      }
+                    }}
+                    className="w-4 h-4 text-blue-600 rounded"
+                  />
+                </td>
                 <td className="px-4 py-3 text-sm sm:text-base lg:text-lg lg:text-lg text-gray-900 dark:text-white">{u.fullName}</td>
                 <td className="px-4 py-3 text-sm sm:text-base lg:text-lg lg:text-lg text-gray-900 dark:text-white">{u.city || '-'}</td>
                 <td className="px-4 py-3 text-sm sm:text-base lg:text-lg lg:text-lg text-gray-900 dark:text-white">{u.voterId || '-'}</td>
@@ -367,7 +442,8 @@ const AdminUsersPage = () => {
                       <textarea
                         value={editForm.address}
                         onChange={e => setEditForm({...editForm, address: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        disabled={selected.isAddressLocked}
+                        className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${selected.isAddressLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                         rows="3"
                       />
                     </div>
@@ -377,7 +453,8 @@ const AdminUsersPage = () => {
                       <textarea
                         value={editForm.currentAddress}
                         onChange={e => setEditForm({...editForm, currentAddress: e.target.value})}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        disabled={selected.isAddressLocked}
+                        className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${selected.isAddressLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                         rows="3"
                       />
                     </div>
@@ -387,11 +464,13 @@ const AdminUsersPage = () => {
                       <select
                         value={editForm.state}
                         onChange={e => setEditForm({...editForm, state: e.target.value, district: '', taluka: '', city: ''})}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        disabled={selected.isAddressLocked}
+                        className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${selected.isAddressLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <option value="">Select State</option>
                         {getStates().map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
+                      {selected.isAddressLocked && <p className="text-xs text-yellow-600 mt-1">Address is locked</p>}
                     </div>
 
                     <div>
@@ -399,8 +478,8 @@ const AdminUsersPage = () => {
                       <select
                         value={editForm.district}
                         onChange={e => setEditForm({...editForm, district: e.target.value, taluka: '', city: ''})}
-                        disabled={!editForm.state}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        disabled={!editForm.state || selected.isAddressLocked}
+                        className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${selected.isAddressLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <option value="">Select District</option>
                         {getDistricts(editForm.state).map(d => <option key={d} value={d}>{d}</option>)}
@@ -412,8 +491,8 @@ const AdminUsersPage = () => {
                       <select
                         value={editForm.taluka}
                         onChange={e => setEditForm({...editForm, taluka: e.target.value, city: ''})}
-                        disabled={!editForm.state || !editForm.district}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        disabled={!editForm.state || !editForm.district || selected.isAddressLocked}
+                        className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${selected.isAddressLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <option value="">Select Taluka</option>
                         {getTalukas(editForm.state, editForm.district).map(t => <option key={t} value={t}>{t}</option>)}
@@ -425,8 +504,8 @@ const AdminUsersPage = () => {
                       <select
                         value={editForm.city}
                         onChange={e => setEditForm({...editForm, city: e.target.value })}
-                        disabled={!editForm.state || !editForm.district || !editForm.taluka}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                        disabled={!editForm.state || !editForm.district || !editForm.taluka || selected.isAddressLocked}
+                        className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white ${selected.isAddressLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
                       >
                         <option value="">Select City/Village</option>
                         {getPlaces(editForm.state, editForm.district, editForm.taluka).map(c => <option key={c} value={c}>{c}</option>)}
@@ -564,7 +643,7 @@ const AdminUsersPage = () => {
                   <div className="md:col-span-2 space-y-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b pb-2">Account Information</h3>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div>
                         <span className="text-slate-500 font-medium">Role:</span>
                         <p className="text-gray-900 dark:text-white capitalize">{selected.role}</p>
@@ -579,6 +658,12 @@ const AdminUsersPage = () => {
                         <span className="text-slate-500 font-medium">Email Verified:</span>
                         <p className={`font-medium ${selected.isEmailVerified ? 'text-green-600' : 'text-red-600'}`}>
                           {selected.isEmailVerified ? 'Verified' : 'Not Verified'}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 font-medium">Address Locked:</span>
+                        <p className={`font-medium ${selected.isAddressLocked ? 'text-yellow-600' : 'text-gray-600'}`}>
+                          {selected.isAddressLocked ? 'Locked' : 'Unlocked'}
                         </p>
                       </div>
                     </div>
@@ -616,41 +701,75 @@ const AdminUsersPage = () => {
             </div>
 
             <div className="sticky bottom-0 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 p-3 sm:p-6">
-              <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3">
-                {isEditing ? (
-                  <>
-                    <button
-                      onClick={cancelEdit}
-                      className="px-4 py-2 rounded bg-gray-500 text-white hover:bg-gray-600 text-sm sm:text-base lg:text-lg"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={saveEdit}
-                      className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 text-sm sm:text-base lg:text-lg"
-                    >
-                      Save Changes
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => startEdit(selected)}
-                      className="px-4 py-2 rounded bg-orange-500 text-white hover:bg-orange-600 text-sm sm:text-base lg:text-lg"
-                    >
-                      Edit User
-                    </button>
-                    <button
-                      onClick={() => {
-                        setSelected(null);
-                        setIsEditing(false);
-                      }}
-                      className="px-4 py-2 rounded bg-gray-500 text-white hover:bg-gray-600 text-sm sm:text-base lg:text-lg"
-                    >
-                      Close
-                    </button>
-                  </>
-                )}
+              <div className="flex flex-col sm:flex-row justify-between gap-2 sm:gap-3">
+                <div className="flex gap-2">
+                  {!isEditing && (
+                    <>
+                      <button
+                        onClick={async () => {
+                          if (window.confirm(`Are you sure you want to ${selected.isAddressLocked ? 'unlock' : 'lock'} this user's address?`)) {
+                            try {
+                              const res = await api.post('/api/admin/users/lock-address', {
+                                userIds: [selected._id],
+                                lock: !selected.isAddressLocked
+                              });
+                              if (res.data?.success) {
+                                alert(res.data.message);
+                                await load();
+                                setSelected({ ...selected, isAddressLocked: !selected.isAddressLocked });
+                              }
+                            } catch (e) {
+                              alert(e.response?.data?.message || 'Failed to update lock status');
+                            }
+                          }
+                        }}
+                        className={`px-4 py-2 rounded text-white text-sm sm:text-base lg:text-lg ${
+                          selected.isAddressLocked 
+                            ? 'bg-yellow-600 hover:bg-yellow-700' 
+                            : 'bg-blue-600 hover:bg-blue-700'
+                        }`}
+                      >
+                        {selected.isAddressLocked ? 'Unlock Address' : 'Lock Address'}
+                      </button>
+                    </>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {isEditing ? (
+                    <>
+                      <button
+                        onClick={cancelEdit}
+                        className="px-4 py-2 rounded bg-gray-500 text-white hover:bg-gray-600 text-sm sm:text-base lg:text-lg"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={saveEdit}
+                        className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 text-sm sm:text-base lg:text-lg"
+                      >
+                        Save Changes
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => startEdit(selected)}
+                        className="px-4 py-2 rounded bg-orange-500 text-white hover:bg-orange-600 text-sm sm:text-base lg:text-lg"
+                      >
+                        Edit User
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelected(null);
+                          setIsEditing(false);
+                        }}
+                        className="px-4 py-2 rounded bg-gray-500 text-white hover:bg-gray-600 text-sm sm:text-base lg:text-lg"
+                      >
+                        Close
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
           </div>
