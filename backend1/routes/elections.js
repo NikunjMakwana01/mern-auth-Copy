@@ -190,6 +190,147 @@ router.get('/available-user', authenticateToken, async (req, res) => {
   }
 });
 
+// Public: published elections by location (state/district/taluka/city via query)
+// Returns both published results and upcoming elections with result declaration dates
+// MUST be before /:id route to avoid route conflicts
+router.get('/published-list', async (req, res) => {
+  try {
+    const { state, district, taluka, city } = req.query;
+    
+    // Build location filters
+    const orFilters = [{ level: 'National' }];
+    if (state) {
+      orFilters.push({ level: 'State', state });
+      if (district) {
+        orFilters.push({ level: 'District', state, district });
+        orFilters.push({ level: { $in: ['Village', 'Municipal'] }, state, district });
+        if (taluka) {
+          // Not stored directly on list, but keep filter flexible
+        }
+        if (city) {
+          orFilters.push({ level: { $in: ['Village', 'Municipal'] }, state, district, villageCity: city });
+        }
+      } else {
+        orFilters.push({ level: { $in: ['Village', 'Municipal'] }, state });
+      }
+    }
+    
+    // Get published results (completed elections with declared results)
+    const publishedFilter = {
+      archived: false,
+      'results.isDeclared': true,
+      status: { $in: ['completed'] },
+      $or: orFilters
+    };
+    
+    // Get completed elections (not yet published but completed)
+    const completedFilter = {
+      archived: false,
+      status: { $in: ['completed'] },
+      'results.isDeclared': { $ne: true },
+      resultDeclarationDate: { $exists: true },
+      $or: orFilters
+    };
+    
+    // Get upcoming elections with result declaration dates (not yet published)
+    const upcomingFilter = {
+      archived: false,
+      status: { $in: ['upcoming', 'active'] },
+      resultDeclarationDate: { $exists: true },
+      $or: orFilters
+    };
+    
+    // Fetch published, completed, and upcoming elections
+    const [publishedElections, completedElections, upcomingElections] = await Promise.all([
+      Election.find(publishedFilter).sort({ 'results.declaredAt': -1 }).lean(),
+      Election.find(completedFilter).sort({ resultDeclarationDate: 1 }).lean(),
+      Election.find(upcomingFilter).sort({ resultDeclarationDate: 1 }).lean()
+    ]);
+    
+    // Combine: published first, then completed, then upcoming
+    const allElections = [...publishedElections, ...completedElections, ...upcomingElections];
+    
+    res.json({ success: true, data: { elections: allElections } });
+  } catch (error) {
+    console.error('Published list (public) error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Published elections for current user (location-based)
+// MUST be before /:id route to avoid route conflicts
+router.get('/published-user/list', authenticateToken, async (req, res) => {
+  try {
+    const user = req.user;
+    const filter = {
+      archived: false,
+      'results.isDeclared': true,
+      status: { $in: ['completed'] }
+    };
+    const orFilters = [{ level: 'National' }];
+    if (user.state) {
+      orFilters.push({ level: 'State', state: user.state });
+      if (user.district) {
+        orFilters.push({ level: 'District', state: user.state, district: user.district });
+        orFilters.push({ level: { $in: ['Village', 'Municipal'] }, state: user.state, district: user.district });
+      } else {
+        orFilters.push({ level: { $in: ['Village', 'Municipal'] }, state: user.state });
+      }
+    }
+    const elections = await Election.find({ ...filter, $or: orFilters }).sort({ resultDeclarationDate: -1 }).lean();
+    res.json({ success: true, data: { elections } });
+  } catch (error) {
+    console.error('Published-user list error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
+// Public results for users - MUST be before /:id route to avoid route conflicts
+router.get('/:id/results-public', async (req, res) => {
+  try {
+    const election = await Election.findById(req.params.id)
+      .populate('candidates.candidateId', 'name partyName partySymbol candidatePhoto')
+      .lean();
+    if (!election) return res.status(404).json({ success: false, message: 'Election not found' });
+    if (!election.results || !election.results.isDeclared) {
+      return res.status(400).json({ success: false, message: 'Results not published yet' });
+    }
+    // Village stats
+    const uf = { isActive: true, profileCompleted: true };
+    if (election.state) uf.state = election.state;
+    if (election.district) uf.district = election.district;
+    if (election.taluka) uf.taluka = election.taluka;
+    if (election.villageCity) uf.city = election.villageCity;
+    const totalVillageVoters = await User.countDocuments(uf);
+    const villageUsers = await User.find(uf).select('_id');
+    const villageUserIds = villageUsers.map(u => u._id);
+    const totalVillageVoted = await Vote.countDocuments({ electionId: election._id, userId: { $in: villageUserIds } });
+    const candidates = (election.candidates || [])
+      .map(c => ({
+        candidateId: c.candidateId?._id || c.candidateId,
+        name: c.candidateId?.name,
+        partyName: c.candidateId?.partyName || c.party,
+        partySymbol: c.candidateId?.partySymbol || c.symbol,
+        candidatePhoto: c.candidateId?.candidatePhoto,
+        votes: c.votes,
+        votePercentage: c.votePercentage
+      }))
+      .sort((a,b) => b.votes - a.votes);
+    res.json({ success: true, data: { election: {
+      _id: election._id,
+      title: election.title,
+      status: election.status,
+      totalVotesCast: election.totalVotesCast,
+      turnoutPercentage: election.turnoutPercentage,
+      results: election.results,
+      villageStats: { totalVoters: totalVillageVoters, totalVoted: totalVillageVoted }
+    }, candidates } });
+  } catch (error) {
+    console.error('Public results error:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
+
 // Get single election by ID
 router.get('/:id', authenticateAdmin, async (req, res) => {
   try {
@@ -335,10 +476,16 @@ router.put('/:id', authenticateAdmin, async (req, res) => {
     const incomingKeys = Object.keys(req.body || {});
     const onlyStatusChange = incomingKeys.length === 1 && incomingKeys[0] === 'status';
     const activeToCompleted = onlyStatusChange && election.status === 'active' && status === 'completed';
+    
+    // Check if only resultDeclarationDate is being updated (for completed elections)
+    const onlyResultDateUpdate = incomingKeys.length === 1 && incomingKeys[0] === 'resultDeclarationDate';
+    const isCompletedElection = election.status === 'completed';
 
-    // Only block updates for non-editable statuses, except allow active -> completed
+    // Only block updates for non-editable statuses, except allow:
+    // 1. active -> completed status change
+    // 2. resultDeclarationDate update for completed elections
     const nonEditableStatuses = ['active', 'completed', 'cancelled', 'postponed'];
-    if (nonEditableStatuses.includes(election.status) && !activeToCompleted) {
+    if (nonEditableStatuses.includes(election.status) && !activeToCompleted && !(isCompletedElection && onlyResultDateUpdate)) {
       return res.status(400).json({ success: false, message: 'Updates are not allowed after activation' });
     }
 
@@ -350,29 +497,40 @@ router.put('/:id', authenticateAdmin, async (req, res) => {
     );
 
     if (anyDateChanged) {
-      if (election.status === 'active' && !activeToCompleted) {
-        return res.status(400).json({ success: false, message: 'Cannot change dates after activation' });
-      }
-      // Compose prospective dates from incoming values or existing ones
-      const newStart = votingStartDate ? new Date(votingStartDate) : election.votingStartDate;
-      const newEnd = votingEndDate ? new Date(votingEndDate) : election.votingEndDate;
-      const newResult = resultDeclarationDate ? new Date(resultDeclarationDate) : election.resultDeclarationDate;
+      // Special handling for completed elections: only allow resultDeclarationDate update
+      if (isCompletedElection && onlyResultDateUpdate) {
+        // For completed elections, only validate that result date is after voting end date
+        const newResult = new Date(resultDeclarationDate);
+        if (!(newResult >= election.votingEndDate)) {
+          return res.status(400).json({ success: false, message: 'Result declaration date must be on or after voting end date' });
+        }
+        election.resultDeclarationDate = newResult;
+      } else {
+        // For other cases, apply full date validation
+        if (election.status === 'active' && !activeToCompleted) {
+          return res.status(400).json({ success: false, message: 'Cannot change dates after activation' });
+        }
+        // Compose prospective dates from incoming values or existing ones
+        const newStart = votingStartDate ? new Date(votingStartDate) : election.votingStartDate;
+        const newEnd = votingEndDate ? new Date(votingEndDate) : election.votingEndDate;
+        const newResult = resultDeclarationDate ? new Date(resultDeclarationDate) : election.resultDeclarationDate;
 
-      // Validate dates relationship (minute-level precision supported)
-      if (!(newStart > now)) {
-        return res.status(400).json({ success: false, message: 'Voting start date must be in the future' });
-      }
-      if (!(newEnd > newStart)) {
-        return res.status(400).json({ success: false, message: 'Voting end date must be after start date' });
-      }
-      if (!(newResult >= newEnd)) {
-        return res.status(400).json({ success: false, message: 'Result declaration date must be on or after voting end date' });
-      }
+        // Validate dates relationship (minute-level precision supported)
+        if (!(newStart > now)) {
+          return res.status(400).json({ success: false, message: 'Voting start date must be in the future' });
+        }
+        if (!(newEnd > newStart)) {
+          return res.status(400).json({ success: false, message: 'Voting end date must be after start date' });
+        }
+        if (!(newResult >= newEnd)) {
+          return res.status(400).json({ success: false, message: 'Result declaration date must be on or after voting end date' });
+        }
 
-      // Apply validated dates
-      election.votingStartDate = newStart;
-      election.votingEndDate = newEnd;
-      election.resultDeclarationDate = newResult;
+        // Apply validated dates
+        election.votingStartDate = newStart;
+        election.votingEndDate = newEnd;
+        election.resultDeclarationDate = newResult;
+      }
     }
 
     // Apply scalar updates
@@ -426,6 +584,7 @@ router.put('/:id', authenticateAdmin, async (req, res) => {
 // Delete election (only draft or upcoming). Active cannot be deleted. Completed remain archived.
 router.delete('/:id', authenticateAdmin, async (req, res) => {
   try {
+    const Candidate = require('../models/Candidate');
     const election = await Election.findById(req.params.id);
     if (!election) {
       return res.status(404).json({ success: false, message: 'Election not found' });
@@ -433,6 +592,21 @@ router.delete('/:id', authenticateAdmin, async (req, res) => {
 
     if (election.status === 'active') {
       return res.status(400).json({ success: false, message: 'Cannot remove an active election' });
+    }
+
+    // Get all candidate IDs assigned to this election
+    const candidateIds = election.candidates?.map(c => {
+      // Handle both ObjectId and string formats
+      return c.candidateId?._id || c.candidateId;
+    }).filter(id => id) || [];
+    
+    // Remove this election from all candidates' assignedElections array
+    if (candidateIds.length > 0) {
+      const result = await Candidate.updateMany(
+        { _id: { $in: candidateIds } },
+        { $pull: { assignedElections: { electionId: election._id } } }
+      );
+      console.log(`Removed election ${election._id} from ${result.modifiedCount} candidates' assignedElections`);
     }
 
     // Soft remove -> archive instead of permanent delete
@@ -524,11 +698,28 @@ router.post('/:id/end', authenticateAdmin, async (req, res) => {
 // Archive (remove from manage list) without permanent delete
 router.post('/:id/archive', authenticateAdmin, async (req, res) => {
   try {
+    const Candidate = require('../models/Candidate');
     const election = await Election.findById(req.params.id);
     if (!election) return res.status(404).json({ success: false, message: 'Election not found' });
     if (election.status === 'active') {
       return res.status(400).json({ success: false, message: 'Cannot archive an active election' });
     }
+    
+    // Get all candidate IDs assigned to this election
+    const candidateIds = election.candidates?.map(c => {
+      // Handle both ObjectId and string formats
+      return c.candidateId?._id || c.candidateId;
+    }).filter(id => id) || [];
+    
+    // Remove this election from all candidates' assignedElections array
+    if (candidateIds.length > 0) {
+      const result = await Candidate.updateMany(
+        { _id: { $in: candidateIds } },
+        { $pull: { assignedElections: { electionId: election._id } } }
+      );
+      console.log(`Removed election ${election._id} from ${result.modifiedCount} candidates' assignedElections`);
+    }
+    
     election.archived = true;
     await election.save();
     res.json({ success: true, message: 'Election archived' });
@@ -558,11 +749,28 @@ router.post('/:id/restore', authenticateAdmin, async (req, res) => {
 // Permanently delete a completed election from database (from history)
 router.delete('/:id/permanent', authenticateAdmin, async (req, res) => {
   try {
+    const Candidate = require('../models/Candidate');
     const election = await Election.findById(req.params.id);
     if (!election) return res.status(404).json({ success: false, message: 'Election not found' });
     if (!['completed', 'upcoming', 'draft'].includes(election.status)) {
       return res.status(400).json({ success: false, message: 'Only completed, upcoming, or draft elections can be permanently deleted' });
     }
+    
+    // Get all candidate IDs assigned to this election
+    const candidateIds = election.candidates?.map(c => {
+      // Handle both ObjectId and string formats
+      return c.candidateId?._id || c.candidateId;
+    }).filter(id => id) || [];
+    
+    // Remove this election from all candidates' assignedElections array
+    if (candidateIds.length > 0) {
+      const result = await Candidate.updateMany(
+        { _id: { $in: candidateIds } },
+        { $pull: { assignedElections: { electionId: election._id } } }
+      );
+      console.log(`Removed election ${election._id} from ${result.modifiedCount} candidates' assignedElections`);
+    }
+    
     await Election.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: 'Election permanently deleted' });
   } catch (error) {
@@ -757,112 +965,6 @@ router.post('/:id/publish-results', authenticateAdmin, async (req, res) => {
     });
   } catch (error) {
     console.error('Publish results error:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-});
-
-// Public results for users
-router.get('/:id/results-public', async (req, res) => {
-  try {
-    const election = await Election.findById(req.params.id)
-      .populate('candidates.candidateId', 'name partyName partySymbol candidatePhoto')
-      .lean();
-    if (!election) return res.status(404).json({ success: false, message: 'Election not found' });
-    if (!election.results || !election.results.isDeclared) {
-      return res.status(400).json({ success: false, message: 'Results not published yet' });
-    }
-    // Village stats
-    const uf = { isActive: true, profileCompleted: true };
-    if (election.state) uf.state = election.state;
-    if (election.district) uf.district = election.district;
-    if (election.taluka) uf.taluka = election.taluka;
-    if (election.villageCity) uf.city = election.villageCity;
-    const totalVillageVoters = await User.countDocuments(uf);
-    const villageUsers = await User.find(uf).select('_id');
-    const villageUserIds = villageUsers.map(u => u._id);
-    const totalVillageVoted = await Vote.countDocuments({ electionId: election._id, userId: { $in: villageUserIds } });
-    const candidates = (election.candidates || [])
-      .map(c => ({
-        candidateId: c.candidateId?._id || c.candidateId,
-        name: c.candidateId?.name,
-        partyName: c.candidateId?.partyName || c.party,
-        partySymbol: c.candidateId?.partySymbol || c.symbol,
-        candidatePhoto: c.candidateId?.candidatePhoto,
-        votes: c.votes,
-        votePercentage: c.votePercentage
-      }))
-      .sort((a,b) => b.votes - a.votes);
-    res.json({ success: true, data: { election: {
-      _id: election._id,
-      title: election.title,
-      status: election.status,
-      totalVotesCast: election.totalVotesCast,
-      turnoutPercentage: election.turnoutPercentage,
-      results: election.results,
-      villageStats: { totalVoters: totalVillageVoters, totalVoted: totalVillageVoted }
-    }, candidates } });
-  } catch (error) {
-    console.error('Public results error:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-});
-
-// Published elections for current user (location-based)
-router.get('/published-user/list', authenticateToken, async (req, res) => {
-  try {
-    const user = req.user;
-    const filter = {
-      archived: false,
-      'results.isDeclared': true,
-      status: { $in: ['completed'] }
-    };
-    const orFilters = [{ level: 'National' }];
-    if (user.state) {
-      orFilters.push({ level: 'State', state: user.state });
-      if (user.district) {
-        orFilters.push({ level: 'District', state: user.state, district: user.district });
-        orFilters.push({ level: { $in: ['Village', 'Municipal'] }, state: user.state, district: user.district });
-      } else {
-        orFilters.push({ level: { $in: ['Village', 'Municipal'] }, state: user.state });
-      }
-    }
-    const elections = await Election.find({ ...filter, $or: orFilters }).sort({ resultDeclarationDate: -1 }).lean();
-    res.json({ success: true, data: { elections } });
-  } catch (error) {
-    console.error('Published-user list error:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-});
-
-// Public: published elections by location (state/district/taluka/city via query)
-router.get('/published-list', async (req, res) => {
-  try {
-    const { state, district, taluka, city } = req.query;
-    const filter = {
-      archived: false,
-      'results.isDeclared': true,
-      status: { $in: ['completed'] }
-    };
-    const orFilters = [{ level: 'National' }];
-    if (state) {
-      orFilters.push({ level: 'State', state });
-      if (district) {
-        orFilters.push({ level: 'District', state, district });
-        orFilters.push({ level: { $in: ['Village', 'Municipal'] }, state, district });
-        if (taluka) {
-          // Not stored directly on list, but keep filter flexible
-        }
-        if (city) {
-          orFilters.push({ level: { $in: ['Village', 'Municipal'] }, state, district, villageCity: city });
-        }
-      } else {
-        orFilters.push({ level: { $in: ['Village', 'Municipal'] }, state });
-      }
-    }
-    const elections = await Election.find({ ...filter, $or: orFilters }).sort({ resultDeclarationDate: -1 }).lean();
-    res.json({ success: true, data: { elections } });
-  } catch (error) {
-    console.error('Published list (public) error:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 });

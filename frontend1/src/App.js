@@ -21,6 +21,7 @@ import VotingPassword from './pages/VotingPassword';
 import VotingPage from './pages/VotingPage';
 import VoteSuccess from './pages/VoteSuccess';
 import AlreadyVoted from './pages/AlreadyVoted';
+import Results from './pages/Results';
 import AdminLayout from './admin/layout/AdminLayout';
 import AdminHome from './admin/pages/AdminHome';
 import AdminLogin from './pages/AdminLogin';
@@ -123,6 +124,14 @@ function App() {
                   element={
                     <ProtectedRoute>
                       <AlreadyVoted />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/results" 
+                  element={
+                    <ProtectedRoute>
+                      <Results />
                     </ProtectedRoute>
                   } 
                 />

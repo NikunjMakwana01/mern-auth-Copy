@@ -233,24 +233,24 @@ const AdminHome = () => {
       {admin && (
         <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Your Profile</h2>
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <div className="w-16 h-16 rounded-full bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center flex-shrink-0">
               <FaUser className="text-orange-600 dark:text-orange-400 text-2xl" />
             </div>
-            <div className="flex-1">
-              <div className="text-lg font-semibold text-gray-900 dark:text-white">
+            <div className="flex-1 min-w-0">
+              <div className="text-lg font-semibold text-gray-900 dark:text-white truncate">
                 {admin.fullName || 'Admin'}
               </div>
               <div className="text-sm text-gray-500 dark:text-gray-400">Administrator</div>
-              <div className="flex items-center gap-4 mt-2 text-sm text-gray-600 dark:text-gray-400">
-                <div className="flex items-center gap-2">
-                  <FaEnvelope />
-                  <span>{admin.email || '-'}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FaEnvelope className="flex-shrink-0" />
+                  <span className="truncate">{admin.email || '-'}</span>
                 </div>
                 {admin.mobile && (
-                  <div className="flex items-center gap-2">
-                    <FaMobileAlt />
-                    <span>{admin.mobile}</span>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <FaMobileAlt className="flex-shrink-0" />
+                    <span className="truncate">{admin.mobile}</span>
                   </div>
                 )}
               </div>

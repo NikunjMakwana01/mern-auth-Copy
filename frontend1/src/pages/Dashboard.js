@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { FaUser, FaEnvelope, FaMobile, FaCalendar, FaCheckCircle, FaVoteYea } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import api from '../utils/api';
 
 const Dashboard = () => {
   const { user, isLoading } = useAuth();
-  const [resultsModal, setResultsModal] = useState(null);
   
   // Wait for auth to complete before rendering
   // Only show loading if actually loading, not if user is temporarily unavailable
@@ -52,37 +50,6 @@ const Dashboard = () => {
 
   const profileComplete = isProfileComplete();
 
-  const handleViewResults = async () => {
-    try {
-      // Use public endpoint filtered by user's location to avoid auth issues
-      const qs = new URLSearchParams({
-        state: user?.state || '',
-        district: user?.district || '',
-        taluka: user?.taluka || '',
-        city: user?.city || ''
-      });
-      
-      // Make sure no token is sent for public endpoints
-      const res = await api.get(`/api/elections/published-list?${qs.toString()}`);
-      const list = res.data?.data?.elections || [];
-      if (list.length === 0) {
-        alert('No published results for your area yet.');
-        return;
-      }
-      // Load details for the most recent published election
-      const election = list[0];
-      const detail = await api.get(`/api/elections/${election._id}/results-public`);
-      setResultsModal(detail.data.data);
-    } catch (e) {
-      console.error(e);
-      const errorMsg = e.response?.data?.message || 'Failed to load results';
-      if (errorMsg.includes('token')) {
-        alert('Please refresh the page and try again.');
-      } else {
-        alert(errorMsg);
-      }
-    }
-  };
 
   // Debug profile completion
   console.log('Dashboard - User profile data:', {
@@ -144,12 +111,12 @@ const Dashboard = () => {
               <p className="text-lg font-semibold text-gray-900 dark:text-white">Results</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">View published results for your area</p>
             </div>
-            <button
-              onClick={handleViewResults}
+            <Link
+              to="/results"
               className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 text-sm font-medium"
             >
               View Results
-            </button>
+            </Link>
           </div>
         </div>
 
@@ -285,39 +252,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Results Modal (public) */}
-      {resultsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{resultsModal.election.title} — Results</h2>
-              <button onClick={() => setResultsModal(null)} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <div className="p-6">
-              <div className="mb-4 text-sm text-gray-700 dark:text-gray-300">Total Votes: <span className="font-semibold">{resultsModal.election.totalVotesCast}</span> • Turnout: <span className="font-semibold">{resultsModal.election.turnoutPercentage}%</span></div>
-              <div className="mb-4 text-sm text-gray-700 dark:text-gray-300">Village Voters: <span className="font-semibold">{resultsModal.election.villageStats?.totalVoters || 0}</span> • Voted: <span className="font-semibold">{resultsModal.election.villageStats?.totalVoted || 0}</span></div>
-              <div className="space-y-3">
-                {resultsModal.candidates.map((c, idx) => (
-                  <div key={c.candidateId} className={`p-4 rounded border ${idx === 0 ? 'border-green-500 bg-green-50 dark:bg-green-900/10' : 'border-gray-200 dark:border-gray-700'}`}>
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-semibold text-gray-900 dark:text-white">{c.name}</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">{c.partyName || '-'}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-bold text-gray-900 dark:text-white">{c.votes}</div>
-                        <div className="text-sm text-gray-600 dark:text-gray-400">{c.votePercentage}%</div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

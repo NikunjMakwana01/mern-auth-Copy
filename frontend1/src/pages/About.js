@@ -1,31 +1,31 @@
 import React from 'react';
-import { FaCode, FaServer, FaUsers, FaBook } from 'react-icons/fa';
+import { FaUsers} from 'react-icons/fa';
 
 const About = () => {
   const teamMembers = [
     {
       name: 'Nikunj Makwana',
-      role: 'Backend Developer',
-      responsibility: 'Maintains backend infrastructure, API development, and server-side logic',
-      icon: <FaServer />,
-      color: 'blue',
-      description: 'Specialized in Node.js, Express.js, and MongoDB with expertise in building scalable and secure backend systems.'
+      // role: 'Backend Developer',
+      // responsibility: 'Maintains backend infrastructure, API development, and server-side logic',
+      // icon: <FaServer />,
+      // color: 'blue',
+      // description: 'Specialized in Node.js, Express.js, and MongoDB with expertise in building scalable and secure backend systems.'
     },
     {
       name: 'Priyansh Modi',
-      role: 'Frontend Developer',
-      responsibility: 'Maintains frontend interface, user experience, and responsive design',
-      icon: <FaCode />,
-      color: 'green',
-      description: 'Expert in React.js, modern UI/UX design, and creating intuitive user interfaces with Tailwind CSS.'
+      // role: 'Frontend Developer',
+      // responsibility: 'Maintains frontend interface, user experience, and responsive design',
+      // icon: <FaCode />,
+      // color: 'green',
+      // description: 'Expert in React.js, modern UI/UX design, and creating intuitive user interfaces with Tailwind CSS.'
     },
     {
       name: 'Tirth Patel',
-      role: 'Documentation Specialist',
-      responsibility: 'Handles project documentation, user guides, and technical writing',
-      icon: <FaBook />,
-      color: 'purple',
-      description: 'Focused on creating comprehensive documentation, user manuals, and maintaining project knowledge base.'
+      // role: 'Documentation Specialist',
+      // responsibility: 'Handles project documentation, user guides, and technical writing',
+      // icon: <FaBook />,
+      // color: 'purple',
+      // description: 'Focused on creating comprehensive documentation, user manuals, and maintaining project knowledge base.'
     }
   ];
 
