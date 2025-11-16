@@ -7,8 +7,6 @@ const AdminResults = () => {
   const [elections, setElections] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [viewing, setViewing] = useState(null);
-  const [viewData, setViewData] = useState(null);
   const [publishing, setPublishing] = useState(null); // Track which election ID is being published
   const [editingResultDate, setEditingResultDate] = useState(null);
   const [resultDateValue, setResultDateValue] = useState('');
@@ -40,26 +38,12 @@ const AdminResults = () => {
 
   useEffect(() => { loadElections(); }, [loadElections]);
 
-  const handleView = async (election) => {
-    try {
-      setViewing(election);
-      setViewData(null);
-      const res = await api.get(`/api/elections/${election._id}/results`);
-      setViewData(res.data.data);
-    } catch (e) {
-      toast.error(e.response?.data?.message || 'Failed to load results');
-    }
-  };
-
   const handlePublish = async (electionId) => {
     try {
       setPublishing(electionId); // Set the specific election ID being published
       const res = await api.post(`/api/elections/${electionId}/publish-results`);
       toast.success(res.data?.message || 'Results published');
       await loadElections();
-      if (viewing && viewing._id === electionId) {
-        await handleView(viewing);
-      }
     } catch (e) {
       toast.error(e.response?.data?.message || 'Failed to publish results');
     } finally {
@@ -85,7 +69,7 @@ const AdminResults = () => {
 
   const handleUpdateResultDate = async (electionId, newDate) => {
     try {
-      const res = await api.put(`/api/elections/${electionId}`, {
+      await api.put(`/api/elections/${electionId}`, {
         resultDeclarationDate: newDate
       });
       toast.success('Result declaration date updated');
@@ -196,12 +180,6 @@ const AdminResults = () => {
                   <td className="px-6 py-4 text-sm">
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleView(e)}
-                        className="px-3 py-1.5 rounded border border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                      >
-                        View Results
-                      </button>
-                      <button
                         onClick={() => handlePublish(e._id)}
                         disabled={!canPublish(e) || publishing === e._id || isPublished(e)}
                         className={`px-3 py-1.5 rounded text-white ${canPublish(e) && !isPublished(e) ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-500 cursor-not-allowed opacity-70'}`}
@@ -230,50 +208,6 @@ const AdminResults = () => {
             )}
           </tbody>
         </table>
-      </div>
-
-      {viewing && viewData && (
-        <ResultsModal data={viewData} onClose={() => { setViewing(null); setViewData(null); }} />
-      )}
-    </div>
-  );
-};
-
-const ResultsModal = ({ data, onClose }) => {
-  const { election, candidates } = data;
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{election.title} — Results</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-        </div>
-        <div className="p-6">
-          <div className="mb-4 text-sm text-gray-700 dark:text-gray-300">Total Votes: <span className="font-semibold">{election.totalVotesCast}</span> • Turnout: <span className="font-semibold">{election.turnoutPercentage}%</span></div>
-          {election.results?.isDeclared && (
-            <div className="mb-4 p-3 rounded bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800">
-              Results published on {new Date(election.results.declaredAt).toLocaleString()}
-            </div>
-          )}
-          <div className="space-y-3">
-            {candidates.map((c, idx) => (
-              <div key={c.candidateId} className={`p-4 rounded border ${idx === 0 ? 'border-green-500 bg-green-50 dark:bg-green-900/10' : 'border-gray-200 dark:border-gray-700'}`}>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-semibold text-gray-900 dark:text-white">{c.name}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{c.partyName || '-'}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-lg font-bold text-gray-900 dark:text-white">{c.votes}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">{c.votePercentage}%</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

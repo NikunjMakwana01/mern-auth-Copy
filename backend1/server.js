@@ -14,6 +14,7 @@ const candidateRoutes = require('./routes/candidates');
 const votingRoutes = require('./routes/voting');
 const Election = require('./models/Election');
 const User = require('./models/User');
+const { publishElectionResults } = require('./routes/elections');
 
 const app = express();
 const PORT = process.env.PORT || 5001;
@@ -89,10 +90,62 @@ mongoose.connect(process.env.MONGODB_URI, {
       console.error('Background sweep error:', err.message);
     }
   };
+
+  // Automatic result publishing: publish results when resultDeclarationDate arrives
+  const autoPublishResults = async () => {
+    try {
+      const now = new Date();
+      
+      // Find completed elections where:
+      // 1. Results are not yet declared (handle both null/undefined results and isDeclared: false)
+      // 2. Result declaration date has passed
+      // 3. Voting has ended
+      // 4. Not archived
+      const electionsToPublish = await Election.find({
+        archived: { $ne: true },
+        status: 'completed',
+        $or: [
+          { 'results.isDeclared': false },
+          { 'results.isDeclared': { $exists: false } },
+          { results: { $exists: false } }
+        ],
+        resultDeclarationDate: { $exists: true, $lte: now },
+        votingEndDate: { $lt: now }
+      });
+
+      if (electionsToPublish.length > 0) {
+        console.log(`Found ${electionsToPublish.length} election(s) ready for auto-publishing`);
+      }
+
+      for (const election of electionsToPublish) {
+        try {
+          // Double-check that results are not already declared (safety check)
+          if (election.results?.isDeclared === true) {
+            console.log(`Skipping election ${election._id} - results already declared`);
+            continue;
+          }
+
+          console.log(`Auto-publishing results for election: ${election.title} (${election._id})`);
+          console.log(`  - Result declaration date: ${election.resultDeclarationDate}`);
+          console.log(`  - Current time: ${now}`);
+          await publishElectionResults(election._id);
+          console.log(`Successfully auto-published results for election: ${election.title}`);
+        } catch (err) {
+          console.error(`Failed to auto-publish results for election ${election._id}:`, err.message);
+          console.error(`  Error details:`, err);
+        }
+      }
+    } catch (err) {
+      console.error('Auto-publish results error:', err.message);
+      console.error('  Error details:', err);
+    }
+  };
   
   // Run every 60 seconds
   sweepStatuses();
+  autoPublishResults();
   setInterval(sweepStatuses, 60 * 1000);
+  setInterval(autoPublishResults, 60 * 1000);
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });

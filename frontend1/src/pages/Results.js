@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../utils/api';
@@ -14,11 +14,7 @@ const Results = () => {
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    loadPublishedElections();
-  }, []);
-
-  const loadPublishedElections = async () => {
+  const loadPublishedElections = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -69,7 +65,11 @@ const Results = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    loadPublishedElections();
+  }, [loadPublishedElections]);
 
   const loadElectionDetails = async (electionId) => {
     try {
@@ -250,12 +250,8 @@ const Results = () => {
                       {electionDetails.election.title}
                     </h2>
                     <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
-                      <span>{electionDetails.election.type}</span>
-                      <span>•</span>
-                      <span>{electionDetails.election.level}</span>
                       {electionDetails.election.villageStats && (
                         <>
-                          <span>•</span>
                           <span className="flex items-center gap-1">
                             <FaUsers />
                             {electionDetails.election.villageStats.totalVoters} voters
@@ -280,12 +276,12 @@ const Results = () => {
                           {electionDetails.election.totalVotesCast || 0}
                         </div>
                       </div>
-                      <div>
+                      {/* <div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">Turnout</div>
                         <div className="text-2xl font-bold text-gray-900 dark:text-white">
                           {electionDetails.election.turnoutPercentage || 0}%
                         </div>
-                      </div>
+                      </div> */}
                       <div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">Total Candidates</div>
                         <div className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -360,9 +356,6 @@ const Results = () => {
                                   <div className="text-right">
                                     <div className="text-2xl font-bold text-gray-900 dark:text-white">
                                       {candidate.votes || 0}
-                                    </div>
-                                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                                      {candidate.votePercentage || 0}%
                                     </div>
                                   </div>
                                 </div>
