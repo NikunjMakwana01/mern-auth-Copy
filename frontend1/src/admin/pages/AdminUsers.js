@@ -72,16 +72,14 @@ const AdminUsersPage = () => {
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
-
-  const updateUser = async (id, payload) => {
-    try {
-      await api.put(`/api/admin/users/${id}`, payload);
-      await load();
-    } catch (e) {
-      alert(e.response?.data?.message || 'Update failed');
-    }
-  };
-
+  // const updateUser = async (id, payload) => {
+  //   try {
+  //     await api.put(`/api/admin/users/${id}`, payload);
+  //     await load();
+  //   } catch (e) {
+  //     alert(e.response?.data?.message || 'Update failed');
+  //   }
+  // };
   const startEdit = (user) => {
     setIsEditing(true);
     setEditForm({
@@ -361,7 +359,7 @@ const AdminUsersPage = () => {
                   }} 
                   className="text-gray-500 hover:text-gray-700 text-xl sm:text-2xl p-1"
                 >
-                  ×
+                  x
                 </button>
               </div>
             </div>
@@ -529,18 +527,6 @@ const AdminUsersPage = () => {
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white border-b pb-2">Account Settings</h3>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
-                        <select
-                          value={editForm.role}
-                          onChange={e => setEditForm({...editForm, role: e.target.value})}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-                        >
-                          <option value="voter">Voter</option>
-                          <option value="admin">Admin</option>
-                        </select>
-                      </div>
-
                       <div className="flex items-center space-x-3">
                         <input
                           type="checkbox"
