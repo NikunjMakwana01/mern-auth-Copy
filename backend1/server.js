@@ -58,7 +58,7 @@ app.get('/health', (req, res) => {
 // Default to Atlas URI template so deployment-ready even without .env
 const mongoUri =
   process.env.MONGODB_URI ||
-  'mongodb+srv://nikunjmakwana1018:Root020@digivote.zu6jzm1.mongodb.net/';
+  'mongodb+srv://nikunjmakwana1018:Root020@digivote.zu6jzm1.mongodb.net/voting-app';
 
 mongoose.connect(mongoUri, {
   useNewUrlParser: true,
