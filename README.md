@@ -208,10 +208,10 @@ npm install
 #### Backend Environment Variables
 Create `backend1/.env` file:
 ```env
-# Database Configuration
-MONGODB_URI=mongodb://localhost:27017/voting-app
-# Or use MongoDB Atlas:
-# MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/voting-app
+# Database Configuration (MongoDB Atlas recommended for deployment)
+MONGODB_URI=mongodb+srv://<username>:<password>@<cluster-name>.mongodb.net/voting-app
+# For local development with MongoDB Compass:
+# MONGODB_URI=mongodb://localhost:27017/voting-app
 
 # JWT Authentication
 JWT_SECRET=your_super_secret_jwt_key_here_make_it_long_and_random

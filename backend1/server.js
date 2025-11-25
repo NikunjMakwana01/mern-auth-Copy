@@ -55,7 +55,12 @@ app.get('/health', (req, res) => {
 });
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI, {
+// Default to Atlas URI template so deployment-ready even without .env
+const mongoUri =
+  process.env.MONGODB_URI ||
+  'mongodb+srv://nikunjmakwana1018:Root020@digivote.zu6jzm1.mongodb.net/';
+
+mongoose.connect(mongoUri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
