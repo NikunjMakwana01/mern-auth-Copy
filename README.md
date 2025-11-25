@@ -284,7 +284,7 @@ npm start
 ```
 
 The application will be available at:
-- **Frontend**: http://localhost:3000
+- **Frontend**: http://localhost:3000 || https://digivote-kqk2.onrender.com
 - **Backend API**: http://localhost:5001
 
 ## 📱 API Endpoints

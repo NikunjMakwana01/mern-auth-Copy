@@ -31,7 +31,7 @@ app.use(limiter);
 // CORS
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://yourdomain.com'] 
+    ? ['https://digivote-kqk2.onrender.com'] 
     : ['http://localhost:3000'],
   credentials: true
 }));
